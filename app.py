@@ -607,6 +607,7 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
 
             return big
 
+
         # Server-rendered selects (so they update based on uploaded CSVs)
         @render.ui
         def metric_select():
