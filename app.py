@@ -99,7 +99,43 @@ def _unlock_tabs_and_go(default="Training"):
 def _on_session_start():
     _protect_tabs_initial()
 
+# --- Global branding ---
+ui.tags.head(
+    ui.tags.style("""
+    .app-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: #0B3D91; /* brand primary */
+        color: white;
+        border-bottom: 4px solid #F4B400; /* brand accent */
+    }
+    .app-banner img {
+        height: 40px;
+        width: auto;
+    }
+    .app-banner .title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+    .app-banner .subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        line-height: 1.1;
+    }
+    """)
+)
 
+ui.div(
+    ui.img(src="logo.png", alt="Logo"),
+    ui.div(
+        ui.div("New Name of Test Here", class_="title"),
+        ui.div("Decision tool", class_="subtitle"),
+    ),
+    class_="app-banner",
+)
 
 # ---------------- PAGE LAYOUT ----------------
 with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
