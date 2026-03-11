@@ -338,30 +338,12 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
         ui.h3("Decision Tree Calculator")
 
         ui.hr()
-        ui.h4("Enter and collect results")
+        ui.h4("Enter each result to receive your certificate ")
 
         ui.input_text("material_name", "Material name", placeholder="e.g. Sample A / Product XYZ")
 
         # Shiny for Python date input:
         ui.input_date("test_date", "Date of test", value=dt.date.today())
-
-        ui.input_action_button("enter_result", "Enter")
-        ui.input_action_button("results_completed", "Results completed")
-       # ui.output_ui("entry_status")
-
-        ui.hr()
-        ui.h4("Results entered this session")
-
-        @render.data_frame
-        def entered_results_table():
-            df = entered_results.get()
-            if df.empty:
-                return pd.DataFrame({"Status": ["No rows entered yet."]})
-            # show a friendly subset first
-            cols = ["material_name", "test_date", "material_type", "EB", "YM", "RAC", "decision_result"]
-            cols = [c for c in cols if c in df.columns]
-            return df[cols]
-        
 
         ui.input_radio_buttons(
             "material_type",
@@ -402,7 +384,27 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
                 style="margin-top: 1rem;",
             )
 
-        # Put this inside the Decision Tool panel code (same scope as other reactive funcs)
+
+        ui.input_action_button("enter_result", "Enter")
+
+
+
+        ui.hr()
+        ui.h4("Results entered this session")
+
+        @render.data_frame
+        def entered_results_table():
+            df = entered_results.get()
+            if df.empty:
+                return pd.DataFrame({"Status": ["No rows entered yet."]})
+            # show a friendly subset first
+            cols = ["material_name", "test_date", "material_type", "EB", "YM", "RAC", "decision_result"]
+            cols = [c for c in cols if c in df.columns]
+            return df[cols]
+        
+
+        ui.input_action_button("results_completed", "Results completed")
+        
 
         entered_results = reactive.Value(pd.DataFrame(columns=[
             "material_name",
