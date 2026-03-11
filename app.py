@@ -137,7 +137,7 @@ ui.div(
 )
 
 # ---------------- PAGE LAYOUT ----------------
-with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
+#with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
 
     # ===== ACTIVATION =====
     with ui.nav_panel("Activation", value="Activation"):
