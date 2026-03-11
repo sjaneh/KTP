@@ -107,9 +107,9 @@ ui.tags.head(
         align-items: center;
         gap: 12px;
         padding: 10px 16px;
-        background: #0B3D91; /* brand primary */
+        background: #193159; /* brand primary */
         color: white;
-        border-bottom: 4px solid #F4B400; /* brand accent */
+        border-bottom: 4px solid #C83E2F; /* brand accent */
     }
     .app-banner img {
         height: 40px;
@@ -131,8 +131,7 @@ ui.tags.head(
 ui.div(
     ui.img(src="logo.png", alt="Logo"),
     ui.div(
-        ui.div("New Name of Test Here", class_="title"),
-        ui.div("Decision tool", class_="subtitle"),
+        ui.div("Cleanliness of Post-Consumer Material Test App", class_="title"),
     ),
     class_="app-banner",
 )
