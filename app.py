@@ -137,7 +137,7 @@ ui.div(
 )
 
 # ---------------- PAGE LAYOUT ----------------
-#with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
+with ui.navset_bar(title="Menu", id="main_nav"):
 
     # ===== ACTIVATION =====
     with ui.nav_panel("Activation", value="Activation"):
@@ -169,9 +169,6 @@ ui.div(
                 email = (input.reg_email() or "").strip().lower()
                 pwd   = (input.reg_password() or "")
                 key   = (input.reg_key() or "").strip()
-
-                #debug attempt
-                #print("DEBUG NEW ACCOUNT PASSWORD:", repr(pwd), "len=", len(pwd))
 
                 if not email or not pwd or not key:
                     return "Please fill all fields."
@@ -209,9 +206,6 @@ ui.div(
             try:
                 email = (input.login_email() or "").strip().lower()
                 pwd   = (input.login_password() or "")
-
-                #debug attempt
-                print("DEBUG LOGIN PASSWORD:", repr(pwd), "len=", len(pwd))
 
                 if not email or not pwd:
                     return "Please enter both fields."
