@@ -238,7 +238,8 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
     with ui.nav_panel("Result Calculator", value="Decision Tool"):
         ui.h3("Result Calculator and Certificate Generator")
         ui.hr()
-        ui.h4("Select 'Enter' after inputting each sample result. Once done, select 'Results Completed' to receive your certificate. ")
+        ui.h4("Select 'Enter' after inputting each sample result.")
+        ui.h4("Once done, select 'Results Completed' to receive your certificate.")
 
         ui.input_text("material_name", "Material name", placeholder="e.g. Sample A / Product XYZ")
 
