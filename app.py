@@ -661,7 +661,7 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
             df = my_uploads_df()
             if df.empty:
                 return "No uploads found for your account."
-            return f"Loaded {len(df)} rows from your uploads. Choose a metric and a Sample Identifier to plot."
+            return f"Choose a metric and a Sample Identifier to plot."
 
         @render.plot
         def results_plot():
@@ -726,6 +726,7 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
                 sub = sub.dropna(subset=[col, time_col])
                 if sub.empty:
                     continue
+                sub = sub.sort_values(by=time_col)
                 ax.plot(sub[time_col], sub[col], marker="o", label=col)
 
             ax.legend()
