@@ -112,8 +112,8 @@ ui.tags.head(
         border-bottom: 4px solid #C83E2F; /* brand accent */
     }
     .app-banner img {
-        height: 60px;
-        width: 134px;
+        height: 90px;
+        width: 200px;
     }
     .app-banner .title {
         font-size: 1.25rem;
@@ -131,7 +131,7 @@ ui.tags.head(
 ui.div(
     ui.img(src="logo.png", alt="Logo"),
     ui.div(
-        ui.div("Cleanliness of Post-Consumer Material Test App", class_="title"),
+        ui.div("Cleanliness of Post-Consumer Material Test", class_="title"),
     ),
     class_="app-banner",
 )
