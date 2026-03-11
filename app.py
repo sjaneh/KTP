@@ -112,8 +112,8 @@ ui.tags.head(
         border-bottom: 4px solid #C83E2F; /* brand accent */
     }
     .app-banner img {
-        height: 40px;
-        width: 89px;
+        height: 60px;
+        width: 134px;
     }
     .app-banner .title {
         font-size: 1.25rem;
