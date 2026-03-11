@@ -575,15 +575,16 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
                     df["_uploaded_filename"] = name
                     ts = None
                     # expect filenames like upload_YYYYMMDD_HHMMSS.csv
-                    if name.startswith("upload_"):
+                    prefixes = ("upload_", "decisiontool_")
+                    ts_iso = ""
+
+                    if name.startswith(prefixes):
                         try:
-                            ts_raw = name[len("upload_"):].split(".")[0]
+                            ts_raw = name.split("_", 1)[1].split(".")[0]  # everything after first underscore
                             ts = time.strptime(ts_raw, "%Y%m%d_%H%M%S")
                             ts_iso = time.strftime("%Y-%m-%d %H:%M:%S", ts)
                         except Exception:
                             ts_iso = ""
-                    else:
-                        ts_iso = ""
                     df["_upload_time"] = ts_iso
                     dfs.append(df)
                 except Exception as ex:
@@ -592,18 +593,21 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
 
             if not dfs:
                 return pd.DataFrame()
-            # concatenate with union of columns
             try:
                 big = pd.concat(dfs, ignore_index=True, sort=False)
             except Exception as ex:
                 print("MY RESULTS: concat failed", ex)
                 return pd.DataFrame()
 
-            # Try to coerce upload_time to datetime and make a column we can use
             try:
                 big["_upload_time_dt"] = pd.to_datetime(big["_upload_time"], errors="coerce")
             except Exception:
                 big["_upload_time_dt"] = pd.NaT
+
+            if "test_date" in big.columns:
+                big["test_date_dt"] = pd.to_datetime(big["test_date"], errors="coerce")
+            else:
+                big["test_date_dt"] = pd.NaT
 
             return big
 
@@ -706,24 +710,24 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
                 ax.set_axis_off()
                 return fig
 
-    # choose time axis: prefer Date column if it's datetime-like, else use upload time
-            if 'Date' in df_plot.columns and pd.api.types.is_datetime64_any_dtype(df_plot['Date']):
-                time_col = 'Date'
-                times = pd.to_datetime(df_plot[time_col], errors="coerce")
+            if "test_date_dt" in df_plot.columns and df_plot["test_date_dt"].notna().any():
+                time_col = "test_date_dt"
+                x_label = "Test date"
             else:
                 time_col = "_upload_time_dt"
-                times = df_plot["_upload_time_dt"]
+                x_label = "Upload time"
 
             fig, ax = plt.subplots(figsize=(8, 4 + 0.6 * len(plot_cols)))
+
             for col in plot_cols:
-                sub = df_plot[[col]].copy()
-                sub[time_col] = times
+                sub = df_plot[[time_col, col]].copy()
                 sub = sub.dropna(subset=[col, time_col])
                 if sub.empty:
                     continue
                 ax.plot(sub[time_col], sub[col], marker="o", label=col)
+
             ax.legend()
-            ax.set_xlabel("Time")
+            ax.set_xlabel(x_label)
             ax.set_ylabel(", ".join(plot_cols))
             ax.tick_params(axis="x", rotation=30)
             fig.tight_layout()
