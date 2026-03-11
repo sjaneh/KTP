@@ -233,115 +233,12 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
             return ui.div(*blocks)
 
 
-    # ===== UPLOAD =====
-    #with ui.nav_panel("Upload", value="Upload"):
-        #ui.h3("Test Results Upload")
-
-        #ui.input_file("tbl", "Upload CSV (Document must be in CSV format and contain 6 columns)", accept=[".csv"], multiple=False)
-        
-
-        #@render.download(filename=lambda: f"template_{time.strftime('%Y%m%d')}.csv", label="Download CSV Template")
-        #def dl_template():
-            #try:
-                #b = download_file(DRIVE_ID, "NBFKTPAPP/Admin/upload_template.csv")
-                #if not b:
-                    #fallback to generated template if OneDrive read fails
-                    #cols = EXPECTED_COLUMNS or [f"col{i}" for i in range(1, 14)]
-                    #df = pd.DataFrame(columns=cols)
-                    #s = io.StringIO()
-                    #df.to_csv(s, index=False)
-                    #yield s.getvalue().encode("utf-8")
-                    #return
-                #yield b
-            #except Exception as ex:
-                #print("TEMPLATE DOWNLOAD ERROR:", ex)
-                #fallback to generated template
-                #cols = EXPECTED_COLUMNS or [f"col{i}" for i in range(1, 14)]
-                #df = pd.DataFrame(columns=cols)
-                #s = io.StringIO()
-                #df.to_csv(s, index=False)
-                #yield s.getvalue().encode("utf-8")
-
-        #@reactive.calc
-        #def parsed_df():
-            #f = input.tbl()
-            #if not f:
-                #return pd.DataFrame()
-            #try:
-                #return pd.read_csv(f[0]["datapath"])
-            #except:
-                #return pd.DataFrame()
-
-        #@render.text
-        #def validation_msg():
-            #email = get_user_email()
-            #if not email:
-                #return "⚠️ Please sign in first."
-            #df = parsed_df()
-            #if df.empty:
-                #return "Awaiting upload…"
-            #if df.shape[1] != 6:
-                #return f"❌ Expected 6 columns, got {df.shape[1]}."
-            #if df.shape[0] < 1:
-                #return "❌ No data rows."
-            #return f"✅ {df.shape[0]} rows × 6 columns."
-
-        #@render.data_frame
-        #def preview_df():
-            #df = parsed_df()
-            #return df.head(25) if not df.empty else pd.DataFrame({"Status": ["No preview available"]})
-
-        #ui.input_action_button("confirm", "Confirm Upload")
-
-        #@render.text
-        #@reactive.event(input.confirm)
-        #def upload_status():
-           # email = get_user_email()
-           # if not email:
-               # return "You must sign in first."
-
-           # f = input.tbl()
-           # df = parsed_df()
-           # if not f or df.empty:
-                #return "Upload not attempted."
-
-            #if df.shape[1] != 6:
-               # return "Invalid column count."
-
-            #ts = time.strftime("%Y%m%d_%H%M%S")
-            #filename = f"upload_{ts}.csv"
-            #dest_dir = user_upload_dir(email)
-            #dest_path = f"{dest_dir}/{filename}"
-
-            #sha256 = _sha256_file(f[0]["datapath"])
-
-            #try:
-                #ensure_folder(DRIVE_ID, dest_dir)
-                #upload_small_file(DRIVE_ID, dest_path, f[0]["datapath"])
-
-                #ensure_folder(DRIVE_ID, user_log_dir(email))
-                #append_audit_log_csv(
-                    #DRIVE_ID, f"{user_log_dir(email)}/audit.csv",
-                   # {
-                  #      "timestamp": ts, "user_id": email, "filename": filename,
-                  #      "rows": df.shape[0], "columns": 6,
-                  #      "sha256": sha256, "drive_path": dest_path,
-                  #      "result": "success"
-#}
-              #  )
-
-             #   return f"✅ Uploaded: {filename}"
-
-          #  except Exception as ex:
-           #     return f"Upload failed: {ex}"
-
-
+   
     # ===== DECISION TOOL =====
-    with ui.nav_panel("Decision Tool", value="Decision Tool"):
-        ui.h3("Decision Tree Calculator")
-
+    with ui.nav_panel("Result Calculator", value="Decision Tool"):
+        ui.h3("Result Calculator and Certificate Generator")
         ui.hr()
-        ui.h4("Enter each result to receive your certificate ")
+        ui.h4("Select 'Enter' after inputting each sample result. Once done, select 'Results Completed' to receive your certificate. ")
 
         ui.input_text("material_name", "Material name", placeholder="e.g. Sample A / Product XYZ")
 
@@ -352,8 +249,8 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
             "material_type",
             "Select material type",
             choices={
-                "natural": "Natural or Mixed Fibre Materials",
-                "synthetic": "Synthetic Fibre and Foam Materials",
+                "Natural or Mixed": "Natural or Mixed Fibre Materials",
+                "Synthetic": "Synthetic Fibre and Foam Materials",
             },
             selected="natural",
         )
@@ -537,9 +434,10 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
                 body_text = (
                     f"Hello,\n\n"
                     f"Your results have been submitted.\n\n"
+                    f"Please see attached certificate.\n\n"
                     f"Uploaded file: {filename}\n"
                     f"Number of rows: {len(df)}\n\n"
-                    f"Summary (first 50 rows):\n"
+                    f"Summary:\n"
                     f"{df[['material_name','test_date','decision_result']].head(50).to_string(index=False)}\n"
                 )
 
@@ -548,16 +446,13 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
                     subject=subject,
                     body_text=body_text,
                     attachments=[
-                        ("certificate.pdf", "application/pdf", pdf_bytes),
+                        ("Cleanliness of Post-Consumer Material Test Certificate.pdf", "application/pdf", pdf_bytes),
                     ],
                 )
             except Exception as ex:
                 ui.notification_show(f"Email failed: {ex}", type="error")
-                # Decide: you might still want to clear table or not. You asked to clear after sending/email+upload,
-                # so only clear if email succeeded. Since it failed, return without clearing.
                 return
 
-            # --- Clear the session table after success ---
             entered_results.set(entered_results.get().iloc[0:0].copy())
 
             ui.notification_show("Results submitted: uploaded and emailed.", type="message")
