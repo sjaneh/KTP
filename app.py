@@ -16,6 +16,7 @@ from shiny.express import ui, render, input
 from shiny import reactive, App
 from shiny import ui as U
 from graph_mail import send_results_email
+from certificate_pdf import make_certificate_pdf_bytes
 
 from accounts import (
     create_account,
@@ -44,6 +45,8 @@ TRAINING_FOLDER      = "NBFKTPAPP/Training"
 TRAINING_VIDEOS_JSON = "NBFKTPAPP/Admin/training_videos.json"
 NATURAL_FIBRES_RULES_JSON   = "NBFKTPAPP/Admin/natural_fibres_decision_rules.json"
 SYNTHETIC_FIBRES_RULES_JSON = "NBFKTPAPP/Admin/synthetic_fibres_decision_rules.json"
+CERT_LOGO_PATH = "NBFKTPAPP/Admin/brand/logo.png"          
+CERT_THEME_JSON = "NBFKTPAPP/Admin/brand/cert_theme.json"
 
 EXPECTED_COLUMNS = None
 
@@ -501,6 +504,31 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
             except Exception as ex:
                 ui.notification_show(f"Upload to OneDrive failed: {ex}", type="error")
                 return
+            
+            logo_bytes = None
+            theme = {}
+
+            try:
+                logo_bytes = download_file(DRIVE_ID, CERT_LOGO_PATH)
+            except Exception as ex:
+                print("CERT: logo download failed:", ex)
+
+            try:
+                theme_obj = read_json(DRIVE_ID, CERT_THEME_JSON)
+                if isinstance(theme_obj, dict):
+                    theme = theme_obj
+            except Exception as ex:
+                print("CERT: theme json read failed:", ex)
+
+            pdf_bytes = make_certificate_pdf_bytes(
+                user_email=email,
+                issued_on=dt.date.today(),
+                results_df=df,
+                logo_png_bytes=logo_bytes,
+                theme=theme,
+            )
+
+
 
             # --- Email summary via Graph ---
             try:
@@ -519,8 +547,9 @@ with ui.navset_bar(title="'New Name of Test Here' App", id="main_nav"):
                     to_email=email,
                     subject=subject,
                     body_text=body_text,
-                    # Optional: attach the CSV they submitted
-                    attachments=[(filename, "text/csv", csv_bytes)],
+                    attachments=[
+                        ("certificate.pdf", "application/pdf", pdf_bytes),
+                    ],
                 )
             except Exception as ex:
                 ui.notification_show(f"Email failed: {ex}", type="error")
