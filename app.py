@@ -113,7 +113,7 @@ ui.tags.head(
     }
     .app-banner img {
         height: 40px;
-        width: auto;
+        width: 89px;
     }
     .app-banner .title {
         font-size: 1.25rem;
