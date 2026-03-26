@@ -809,8 +809,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 return pd.DataFrame({"Status": ["No uploads found"]})
     
             rowval = input.rowval() or ""
-    
-    # Find the first non-numeric column to use as identifier
+
             exclude = {"_uploaded_filename", "_upload_time", "_upload_time_dt"}
             id_cols = [c for c in df.columns if c not in exclude and not pd.api.types.is_numeric_dtype(df[c])]
     
@@ -824,6 +823,6 @@ with ui.navset_bar(title="Menu", id="main_nav"):
     
     # show a few columns plus metadata
             cols = [c for c in df_show.columns if not c.startswith("_")][:10]
-            meta = ["_uploaded_filename", "_upload_time"]
+            meta = ["_upload_time"]
             display_cols = cols + [c for c in meta if c in df_show.columns]
             return df_show[display_cols].head(200)
