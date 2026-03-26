@@ -156,9 +156,20 @@ def make_certificate_pdf_bytes(
     if logo_png_bytes:
         try:
             img = ImageReader(io.BytesIO(logo_png_bytes))
-            logo_h = 18 * mm
-            logo_w = 50 * mm
-            c.drawImage(img, 12 * mm, height - 23 * mm, width=logo_w, height=logo_h, mask="auto")
+            target_h = 22 * mm  # increase this to make it taller
+            iw, ih = img.getSize()
+            target_w = target_h * (iw / ih)
+
+            c.drawImage(
+                img, 
+                12 * mm, 
+                height - 25 * mm,   # adjust Y if needed after changing height
+                width=target_w,
+                height=target_h,
+                mask="auto",
+                preserveAspectRatio=True,
+                anchor="sw",
+            )
         except Exception:
             pass
 
