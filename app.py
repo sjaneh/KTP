@@ -102,104 +102,59 @@ def _on_session_start():
 ui.tags.head(
     ui.tags.style("""
 .app-banner {
-    position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto;   /* logo | title | right spacer */
     align-items: center;
     gap: 12px;
     padding: 10px 16px;
     background: #193159;
     color: white;
     border-bottom: 4px solid #C83E2F;
-    min-height: 110px;
 }
 
-/* Logo */
+/* Logo: responsive, but not tiny */
 .app-banner img {
-    height: 90px;
-    width: 200px;
-    z-index: 2;
-    flex: 0 0 auto;
+    height: auto;
+    width: clamp(110px, 22vw, 200px);       /* min 110px, scales, max 200px */
 }
 
-/* Title block (centered on larger screens) */
+/* Title always centered in the middle column, no overlap possible */
 .app-banner .title-wrap {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     text-align: center;
-    z-index: 1;
-    width: min(80%, 900px);   /* NOTE: you had a typo '00px' before */
-    pointer-events: none;
+    min-width: 0;                           /* IMPORTANT: allows text to wrap instead of overflow */
 }
 
-/* Bigger title on laptop/desktop */
+/* Make title scale with viewport width, within reasonable bounds */
 .app-banner .title {
-    font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.1;
+    margin: 0;
+    font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+    overflow-wrap: anywhere;                /* break long words if needed */
 }
+
 .app-banner .subtitle {
-    font-size: 0.95rem;
+    margin: 0;
     opacity: 0.9;
     line-height: 1.1;
+    font-size: clamp(0.85rem, 1.4vw, 1.0rem);
+    overflow-wrap: anywhere;
 }
 
-/* ---------- Responsive tweaks ---------- */
+/* Right spacer: keeps the title truly centered overall (balances the logo column) */
+.app-banner::after {
+    content: "";
+}
 
-/* Tablets / small laptops: shrink logo a bit */
-@media (max-width: 768px) {
+/* On very narrow screens, stack naturally */
+@media (max-width: 420px) {
+    .app-banner {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+    }
     .app-banner img {
-        height: 72px;
-        width: 160px;
-    }
-    .app-banner {
-        min-height: 95px;
-    }
-}
-
-/* Phones: shift title right + shrink logo (avoid overlap) */
-@media (max-width: 480px) {
-    .app-banner img {
-        height: 58px;
-        width: 128px;
-    }
-
-    .app-banner .title-wrap {
-        left: 66%;
-        width: 66%;
-        text-align: left;
-        padding-left: 6px;
-    }
-
-    .app-banner .title {
-        font-size: 1.05rem;
-        line-height: 1.05;
-    }
-    .app-banner .subtitle {
-        font-size: 0.85rem;
-    }
-
-    .app-banner {
-        min-height: 85px;
-        padding: 8px 12px;
-    }
-}
-
-/* Very small phones: stack instead of absolute centering */
-@media (max-width: 360px) {
-    .app-banner {
-        flex-direction: column;
-        align-items: flex-start;
-        min-height: unset;
-    }
-
-    .app-banner .title-wrap {
-        position: static;
-        transform: none;
-        width: 100%;
-        text-align: left;
-        padding-top: 6px;
-        pointer-events: auto;
+        width: clamp(120px, 45vw, 180px);
     }
 }
     """)
