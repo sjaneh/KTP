@@ -285,21 +285,72 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             selected="natural",
         )
 
-        ui.input_numeric("num_eb", "Enterobacteriaceae (EB)", value=0)
-        ui.input_numeric("num_ym", "Yeast & Mould (YM)", value=0)
-        ui.input_numeric("num_rac", "Rapid Aerobic Count (RAC)", value=0)
+        ui.h4("Enter three replicate results per microbial type.")
+        ui.p("You may enter a number or TNTC (case-insensitive).")
+
+        ui.h5("Enterobacteriaceae (EB) replicates")
+        ui.input_text("eb_1", "EB replicate 1", value="0")
+        ui.input_text("eb_2", "EB replicate 2", value="0")
+        ui.input_text("eb_3", "EB replicate 3", value="0")
+
+        ui.h5("Yeast & Mould (YM) replicates")
+        ui.input_text("ym_1", "YM replicate 1", value="0")
+        ui.input_text("ym_2", "YM replicate 2", value="0")
+        ui.input_text("ym_3", "YM replicate 3", value="0")
+
+        ui.h5("Rapid Aerobic Count (RAC) replicates")
+        ui.input_text("rac_1", "RAC replicate 1", value="0")
+        ui.input_text("rac_2", "RAC replicate 2", value="0")
+        ui.input_text("rac_3", "RAC replicate 3", value="0")
+
+        TNTC_SENTINEL = "TNTC"
+
+        def _is_tntc(val) -> bool:
+            return str(val or "").strip().upper() == TNTC_SENTINEL
+
+        def _parse_number(val) -> float:
+            # allow commas like "1,000"
+            s = str(val or "").strip().replace(",", "")
+            if not s:
+                raise ValueError("Empty value")
+            return float(s)
+
+        def _avg3_or_tntc(a, b, c):
+            # If any replicate is TNTC => average shown as TNTC
+            if _is_tntc(a) or _is_tntc(b) or _is_tntc(c):
+                return TNTC_SENTINEL
+            return (_parse_number(a) + _parse_number(b) + _parse_number(c)) / 3.0
+
+        def _fmt_avg(x):
+            return x if x == TNTC_SENTINEL else f"{float(x):.2f}"
+
+        def _any_tntc_in_replicates() -> bool:
+            vals = [
+                input.eb_1(), input.eb_2(), input.eb_3(),
+                input.ym_1(), input.ym_2(), input.ym_3(),
+                input.rac_1(), input.rac_2(), input.rac_3(),
+            ]
+            return any(_is_tntc(v) for v in vals)
 
         @render.ui
         def decision_result():
             try:
-                eb = float(input.num_eb())
-                ym = float(input.num_ym())
-                rac = float(input.num_rac())
+                eb_avg = _avg3_or_tntc(input.eb_1(), input.eb_2(), input.eb_3())
+                ym_avg = _avg3_or_tntc(input.ym_1(), input.ym_2(), input.ym_3())
+                rac_avg = _avg3_or_tntc(input.rac_1(), input.rac_2(), input.rac_3())
             except Exception:
-                return ui.div("Please enter valid numbers.", style="color: #b00020;")
+                return ui.div("Please enter valid numbers for all replicates (or TNTC).", style="color: #b00020;")
 
-            rules = decision_rules()
-            result, explanation = decision_logic.evaluate_triplet([eb, ym, rac], rules)
+            # If ANY box is TNTC, skip decision tree entirely
+            if _any_tntc_in_replicates():
+                result = "Red"
+                explanation = "TNTC was entered for at least one replicate."
+            else:
+                rules = decision_rules()
+                result, explanation = decision_logic.evaluate_triplet(
+                    [float(eb_avg), float(ym_avg), float(rac_avg)],
+                    rules,
+                )
 
             color_map = {
                 "Green": "#2e7d32",
@@ -309,6 +360,10 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             color = color_map.get(str(result), "#333333")
 
             return ui.div(
+                ui.div(
+                    f"Averages → EB: {_fmt_avg(eb_avg)}, YM: {_fmt_avg(ym_avg)}, RAC: {_fmt_avg(rac_avg)}",
+                    style="margin-bottom: 0.5rem; color: #333333;",
+                ),
                 ui.div(str(result), style=f"color: {color}; font-weight: 700; font-size: 1.2rem;"),
                 ui.div(str(explanation), style="margin-top: 0.25rem; color: #333333;"),
                 style="margin-top: 1rem;",
@@ -370,36 +425,51 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 return
 
             try:
-                eb = float(input.num_eb())
-                ym = float(input.num_ym())
-                rac = float(input.num_rac())
+                eb_avg = _avg3_or_tntc(input.eb_1(), input.eb_2(), input.eb_3())
+                ym_avg = _avg3_or_tntc(input.ym_1(), input.ym_2(), input.ym_3())
+                rac_avg = _avg3_or_tntc(input.rac_1(), input.rac_2(), input.rac_3())
             except Exception:
-                ui.notification_show("Please enter valid numbers for EB/YM/RAC.", type="error")
+                ui.notification_show("Please enter valid numbers for all replicates (or TNTC).", type="error")
                 return
 
-            rules = decision_rules()
-            result, explanation = decision_logic.evaluate_triplet([eb, ym, rac], rules)
+            if _any_tntc_in_replicates():
+                result = "Red"
+                explanation = "TNTC was entered for at least one replicate."
+            else:
+                rules = decision_rules()
+                result, explanation = decision_logic.evaluate_triplet(
+                    [float(eb_avg), float(ym_avg), float(rac_avg)],
+                    rules,
+                )
+
+           # rules = decision_rules()
+           # result, explanation = decision_logic.evaluate_triplet([eb, ym, rac], rules)
 
             df = entered_results.get()
             new_row = pd.DataFrame([{
                 "material_name": name,
-                "test_date": str(test_date),               # store as ISO string for CSV consistency
+                "test_date": str(test_date),
                 "material_type": input.material_type(),
-                "EB": eb,
-                "YM": ym,
-                "RAC": rac,
-                "decision_result": str(result),            # Red/Amber/Green
-                "decision_explanation": str(explanation),  # optional but useful
+                "EB": None if eb_avg == TNTC_SENTINEL else float(eb_avg),
+                "YM": None if ym_avg == TNTC_SENTINEL else float(ym_avg),
+                "RAC": None if rac_avg == TNTC_SENTINEL else float(rac_avg),
+                "decision_result": str(result),
+                "decision_explanation": str(explanation),
                 "entered_at": dt.datetime.now().isoformat(timespec="seconds"),
             }])
 
             entered_results.set(pd.concat([df, new_row], ignore_index=True))
 
-            # Optional: reset inputs after entry
             ui.update_text("material_name", value="")
-            ui.update_numeric("num_eb", value=0)
-            ui.update_numeric("num_ym", value=0)
-            ui.update_numeric("num_rac", value=0)
+            ui.update_text("eb_1", value="0")
+            ui.update_text("eb_2", value="0")
+            ui.update_text("eb_3", value="0")
+            ui.update_text("ym_1", value="0")
+            ui.update_text("ym_2", value="0")
+            ui.update_text("ym_3", value="0")
+            ui.update_text("rac_1", value="0")
+            ui.update_text("rac_2", value="0")
+            ui.update_text("rac_3", value="0")
 
         
 
