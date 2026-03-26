@@ -40,7 +40,7 @@ def make_certificate_pdf_bytes(
     title = theme.get("title", "Test Certificate")
     subtitle = theme.get("subtitle", "Decision Tool Results")
     brand_name = theme.get("brand_name", "")
-    primary = _hex_to_color(theme.get("primary_hex", "#002855"))
+    primary = _hex_to_color(theme.get("primary_hex", "#193159"))
     accent = _hex_to_color(theme.get("accent_hex", "#F4B400"))
     footer_text = theme.get("footer_text", "")
 
