@@ -102,42 +102,72 @@ def _on_session_start():
 ui.tags.head(
     ui.tags.style("""
     .app-banner {
-        position: relative;           
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 16px;
-        background: #193159; /* brand primary */
-        color: white;
-        border-bottom: 4px solid #C83E2F; /* brand accent */
-        min-height: 110px;               
-    }
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #193159;
+    color: white;
+    border-bottom: 4px solid #C83E2F;
+    min-height: 110px;
+}
+
+.app-banner img {
+    height: 90px;
+    width: 200px;
+    z-index: 2;
+    flex: 0 0 auto;
+}
+
+.app-banner .title-wrap {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 1;
+    width: min(70%, 700px);
+    pointer-events: none;
+}
+
+/* ---------- Responsive tweaks ---------- */
+
+/* Tablets / small laptops: shrink logo a bit */
+@media (max-width: 768px) {
     .app-banner img {
-        height: 90px;
-        width: 200px;
-        z-index: 2;                      
+        height: 72px;
+        width: 160px;
     }
-    .app-banner .title-wrap {            
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        z-index: 1;
-        width: 70%;                      
-        pointer-events: none;            
+    .app-banner {
+        min-height: 95px;
     }
+}
+
+/* Phones: shift title right + shrink logo a bit more (but not tiny) */
+@media (max-width: 480px) {
+    .app-banner img {
+        height: 60px;
+        width: 135px;
+    }
+
+    /* Shift title right so it clears the logo */
+    .app-banner .title-wrap {
+        left: 58%;                  /* was 50% */
+        width: 78%;
+    }
+
     .app-banner .title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        line-height: 1.1;
-        margin: 0;
+        font-size: 1.05rem;         /* optional: prevent wrapping */
     }
     .app-banner .subtitle {
-        font-size: 0.9rem;
-        opacity: 0.9;
-        line-height: 1.1;
-        margin: 0;
+        font-size: 0.85rem;
     }
+
+    .app-banner {
+        min-height: 85px;
+        padding: 8px 12px;
+    }
+}
     """)
 )
 
