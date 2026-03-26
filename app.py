@@ -17,6 +17,7 @@ from shiny import reactive, App
 from shiny import ui as U
 from graph_mail import send_results_email
 from certificate_pdf import make_certificate_pdf_bytes
+from crypto_store import encrypt_for_user, decrypt_for_user
 
 from accounts import (
     create_account,
@@ -519,15 +520,15 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             # --- Upload to OneDrive (so My results page continues to work) ---
             ts = time.strftime("%Y%m%d_%H%M%S")
             filename = f"decisiontool_{ts}.csv"
+            enc_filename = filename + ".enc"
             dest_dir = user_upload_dir(email)
-            dest_path = f"{dest_dir}/{filename}"
-
-            # Convert to CSV bytes
+            dest_path = f"{dest_dir}/{enc_filename}"
             csv_bytes = df.to_csv(index=False).encode("utf-8")
+            enc_bytes = encrypt_for_user(email, csv_bytes)
 
             try:
                 ensure_folder(DRIVE_ID, dest_dir)
-                upload_bytes(DRIVE_ID, dest_path, csv_bytes, content_type="text/csv")
+                upload_bytes(DRIVE_ID, dest_path, enc_bytes, content_type="application/octet-stream")
             except Exception as ex:
                 ui.notification_show(f"Upload to OneDrive failed: {ex}", type="error")
                 return
@@ -615,34 +616,39 @@ with ui.navset_bar(title="Menu", id="main_nav"):
 
             dfs = []
             for it in items:
-                # skip folders, only handle files
                 if "file" not in it:
                     continue
                 name = it.get("name", "")
-                # build path and download
                 path = f"{folder}/{name}"
                 try:
                     b = download_file(DRIVE_ID, path)
                     if not b:
                         print("MY RESULTS: download_file returned empty for", path)
                         continue
-                    # read into pandas - handle bytes
+
                     try:
-                        df = pd.read_csv(io.BytesIO(b))
+                        plain = decrypt_for_user(email, b)
+                    except Exception as ex:
+                        print("MY RESULTS: decrypt failed for", path, ex)
+                        continue
+
+                    try:
+                        df = pd.read_csv(io.BytesIO(plain))
                     except Exception:
-                        # try decode as text
-                        s = b.decode("utf-8", errors="replace")
+                        s = plain.decode("utf-8", errors="replace")
                         df = pd.read_csv(io.StringIO(s))
-                    # attach metadata: source filename and attempt to get timestamp from filename
+
                     df["_uploaded_filename"] = name
                     ts = None
-                    # expect filenames like upload_YYYYMMDD_HHMMSS.csv
+                    # filenames structure upload_YYYYMMDD_HHMMSS.csv
+
+                    name_for_ts = name[:-4] if name.endswith(".enc") else name  
                     prefixes = ("upload_", "decisiontool_")
                     ts_iso = ""
 
-                    if name.startswith(prefixes):
+                    if name_for_ts.startswith(prefixes):
                         try:
-                            ts_raw = name.split("_", 1)[1].split(".")[0]  # everything after first underscore
+                            ts_raw = name_for_ts.split("_", 1)[1].split(".")[0]
                             ts = time.strptime(ts_raw, "%Y%m%d_%H%M%S")
                             ts_iso = time.strftime("%Y-%m-%d %H:%M:%S", ts)
                         except Exception:
