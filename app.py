@@ -83,14 +83,12 @@ def decision_rules():
 # ---------- NAVIGATION & SECURITY ----------
 def _protect_tabs_initial():
     ui.update_nav_panel("main_nav", target="Training", method="hide")
-    #ui.update_nav_panel("main_nav", target="Upload", method="hide")
     ui.update_nav_panel("main_nav", target="Decision Tool", method="hide")
     ui.update_nav_panel("main_nav", target="My results", method="hide")
     ui.update_navset("main_nav", selected="Activation")
 
 def _unlock_tabs_and_go(default="Training"):
     ui.update_nav_panel("main_nav", target="Training", method="show")
-    #ui.update_nav_panel("main_nav", target="Upload", method="show")
     ui.update_nav_panel("main_nav", target="Decision Tool", method="show")
     ui.update_nav_panel("main_nav", target="My results", method="show")
     ui.update_nav_panel("main_nav", target="Activation", method="hide")
@@ -104,6 +102,7 @@ def _on_session_start():
 ui.tags.head(
     ui.tags.style("""
     .app-banner {
+        position: relative;           
         display: flex;
         align-items: center;
         gap: 12px;
@@ -111,20 +110,33 @@ ui.tags.head(
         background: #193159; /* brand primary */
         color: white;
         border-bottom: 4px solid #C83E2F; /* brand accent */
+        min-height: 110px;               
     }
     .app-banner img {
         height: 90px;
         width: 200px;
+        z-index: 2;                      
+    }
+    .app-banner .title-wrap {            
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        z-index: 1;
+        width: 70%;                      
+        pointer-events: none;            
     }
     .app-banner .title {
         font-size: 1.25rem;
         font-weight: 700;
         line-height: 1.1;
+        margin: 0;
     }
     .app-banner .subtitle {
         font-size: 0.9rem;
         opacity: 0.9;
         line-height: 1.1;
+        margin: 0;
     }
     """)
 )
