@@ -30,7 +30,10 @@ def make_certificate_pdf_bytes(
     theme: dict[str, Any] | None = None,
 ) -> bytes:
     """
-    Generate a single-page branded PDF certificate (A4) with a table of results.
+    Generate a single-page branded PDF certificate (A4) with TWO tables:
+      1) Replicate results (EB_1..3, YM_1..3, RAC_1..3)
+      2) Averages + outcome (EB/YM/RAC rounded to 2dp + decision_result)
+
     Designed to be reliable on hosted environments (pure Python ReportLab).
     """
     theme = theme or {}
@@ -45,7 +48,7 @@ def make_certificate_pdf_bytes(
         """Format cell values for PDF display."""
         if pd.isna(value):
             return ""
-        # force averages to 2dp
+        # Averages: force to 2dp
         if col_name in ("EB", "YM", "RAC"):
             try:
                 return f"{float(value):.2f}"
@@ -66,7 +69,7 @@ def make_certificate_pdf_bytes(
           - "replicates": lots of narrow columns
           - "summary": fewer columns, give Material more space
         """
-        widths = []
+        widths: list[float] = []
         for cn in cols:
             if cn == "material_name":
                 widths.append(table_w * (0.22 if mode == "replicates" else 0.35))
@@ -75,14 +78,12 @@ def make_certificate_pdf_bytes(
             elif cn == "decision_result":
                 widths.append(table_w * 0.18)
             else:
-                # replicate columns or avg columns
                 widths.append(table_w * (0.06 if mode == "replicates" else 0.10))
 
-        # normalize
         scale = table_w / sum(widths) if widths else 1.0
         return [w * scale for w in widths]
 
-    def _styled_table(data: list[list[str]], col_widths: list[float], font_size: int = 8) -> Table:
+    def _styled_table(data: list[list[str]], col_widths: list[float], font_size: int) -> Table:
         t = Table(data, colWidths=col_widths, repeatRows=1)
         t.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), primary),
@@ -100,9 +101,8 @@ def make_certificate_pdf_bytes(
         return t
 
     # --------------------------
-    # Two-table certificate layout
+    # Columns and header labels
     # --------------------------
-    # Define columns (only include columns that exist)
     replicates_cols_all = [
         "material_name", "test_date",
         "EB_1", "EB_2", "EB_3",
@@ -121,7 +121,6 @@ def make_certificate_pdf_bytes(
     df_rep = results_df[replicates_cols].copy() if replicates_cols else pd.DataFrame()
     df_sum = results_df[summary_cols].copy() if summary_cols else pd.DataFrame()
 
-    # Headers
     header_map = {
         "material_name": "Material",
         "test_date": "Test date",
@@ -133,15 +132,64 @@ def make_certificate_pdf_bytes(
         "EB": "EB avg", "YM": "YM avg", "RAC": "RAC avg",
         "decision_result": "Result",
     }
+
+    # --------------------------
+    # PDF canvas + header
+    # --------------------------
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
     width, height = A4
 
-    # --- Results tables ---
+    # --- Header bar ---
+    c.setFillColor(primary)
+    c.rect(0, height - 28 * mm, width, 28 * mm, fill=1, stroke=0)
+
+    # Logo (if present)
+    if logo_png_bytes:
+        try:
+            img = ImageReader(io.BytesIO(logo_png_bytes))
+            logo_h = 18 * mm
+            logo_w = 50 * mm
+            c.drawImage(img, 12 * mm, height - 23 * mm, width=logo_w, height=logo_h, mask="auto")
+        except Exception:
+            pass
+
+    # Title text on header
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 16)
+    c.drawRightString(width - 12 * mm, height - 12 * mm, title)
+
+    c.setFont("Helvetica", 10)
+    if brand_name:
+        c.drawRightString(width - 12 * mm, height - 19 * mm, brand_name)
+
+    # --- Body meta info ---
+    y = height - 40 * mm
+    c.setFillColor(colors.black)
+
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(12 * mm, y, subtitle)
+    y -= 8 * mm
+
+    c.setFont("Helvetica", 10)
+    c.drawString(12 * mm, y, f"Issued to: {user_email}")
+    y -= 6 * mm
+    c.drawString(12 * mm, y, f"Issued on: {issued_on.isoformat()}")
+    y -= 10 * mm
+
+    # Accent line
+    c.setStrokeColor(accent)
+    c.setLineWidth(2)
+    c.line(12 * mm, y, width - 12 * mm, y)
+    y -= 8 * mm
+
+    # --------------------------
+    # Two stacked tables
+    # --------------------------
     table_w = width - 24 * mm
     x_left = 12 * mm
 
-    # Table title: Replicates
+    # Replicates section title
     c.setFont("Helvetica-Bold", 10)
     c.setFillColor(colors.black)
     c.drawString(x_left, y, "Replicate results")
@@ -152,10 +200,8 @@ def make_certificate_pdf_bytes(
         t_rep = _styled_table(
             data_rep,
             _col_widths(table_w, replicates_cols, mode="replicates"),
-            font_size=7,  # replicates table is dense
+            font_size=7,
         )
-
-        # Wrap to get actual height
         w_rep, h_rep = t_rep.wrap(table_w, height)
         y_rep_bottom = y - h_rep
         t_rep.drawOn(c, x_left, y_rep_bottom)
@@ -165,7 +211,7 @@ def make_certificate_pdf_bytes(
         c.drawString(x_left, y, "No replicate columns found in results.")
         y -= 10 * mm
 
-    # Table title: Summary
+    # Summary section title
     c.setFont("Helvetica-Bold", 10)
     c.drawString(x_left, y, "Averages and outcome")
     y -= 6 * mm
@@ -177,7 +223,6 @@ def make_certificate_pdf_bytes(
             _col_widths(table_w, summary_cols, mode="summary"),
             font_size=8,
         )
-
         w_sum, h_sum = t_sum.wrap(table_w, height)
         y_sum_bottom = y - h_sum
         t_sum.drawOn(c, x_left, y_sum_bottom)
@@ -187,6 +232,12 @@ def make_certificate_pdf_bytes(
         c.drawString(x_left, y, "No summary columns found in results.")
         y -= 10 * mm
 
-    
+    # --- Footer ---
+    if footer_text:
+        c.setFont("Helvetica", 8)
+        c.setFillColor(colors.grey)
+        c.drawString(12 * mm, 10 * mm, footer_text)
 
-    
+    c.showPage()
+    c.save()
+    return buf.getvalue()
