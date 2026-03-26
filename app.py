@@ -581,8 +581,10 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                     body_text=body_text,
                     attachments=[
                         ("Cleanliness of Post-Consumer Material Test Certificate.pdf", "application/pdf", pdf_bytes),
+                        (filename, "text/csv", csv_bytes),
                     ],
                 )
+
             except Exception as ex:
                 ui.notification_show(f"Email failed: {ex}", type="error")
                 return
