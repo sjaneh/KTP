@@ -268,12 +268,12 @@ with ui.navset_bar(title="Menu", id="main_nav"):
     with ui.nav_panel("Result Calculator", value="Decision Tool"):
         ui.h3("Result Calculator and Certificate Generator")
         ui.hr()
-        ui.h4("Select 'Enter' after inputting each sample result.")
-        ui.h4("Once done, select 'Results Completed' to receive your certificate.")
+        ui.h4("1. Input each result in the spaces provided below. ")
+        ui.p("Enter a number or 'TNTC'")
+        ui.h4("2. Press 'Enter' after each sample")
+        ui.h4("3. Once all results are entered press 'Results Complete' to recieve your automatically generated certificate.")
 
         ui.input_text("material_name", "Material name", placeholder="e.g. Sample A / Product XYZ")
-
-        # Shiny for Python date input:
         ui.input_date("test_date", "Date of test", value=dt.date.today())
 
         ui.input_radio_buttons(
@@ -285,9 +285,6 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             },
             selected="natural",
         )
-
-        ui.h4("Enter three replicate results per microbial type.")
-        ui.p("You may enter a number or TNTC (case-insensitive).")
 
         ui.h5("Enterobacteriaceae (EB) replicates")
         ui.input_text("eb_1", "EB replicate 1", value="0")
