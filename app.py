@@ -319,7 +319,8 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             # If any replicate is TNTC => average shown as TNTC
             if _is_tntc(a) or _is_tntc(b) or _is_tntc(c):
                 return TNTC_SENTINEL
-            return (_parse_number(a) + _parse_number(b) + _parse_number(c)) / 3.0
+            avg = (_parse_number(a) + _parse_number(b) + _parse_number(c)) / 3.0
+            return round(avg, 2)
 
         def _fmt_avg(x):
             return x if x == TNTC_SENTINEL else f"{float(x):.2f}"
@@ -395,9 +396,10 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             "material_name",
             "test_date",
             "material_type",
-            "EB",
-            "YM",
-            "RAC",
+            "EB_1", "EB_2", "EB_3",
+            "YM_1", "YM_2", "YM_3",
+            "RAC_1", "RAC_2", "RAC_3",
+            "EB", "YM", "RAC",
             "decision_result",
             "decision_explanation",
             "entered_at",
@@ -442,17 +444,28 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                     rules,
                 )
 
-           # rules = decision_rules()
-           # result, explanation = decision_logic.evaluate_triplet([eb, ym, rac], rules)
-
             df = entered_results.get()
             new_row = pd.DataFrame([{
                 "material_name": name,
                 "test_date": str(test_date),
                 "material_type": input.material_type(),
+
+                # Replicates (stored exactly as user typed, trimmed)
+                "EB_1": str(input.eb_1() or "").strip(),
+                "EB_2": str(input.eb_2() or "").strip(),
+                "EB_3": str(input.eb_3() or "").strip(),
+                "YM_1": str(input.ym_1() or "").strip(),
+                "YM_2": str(input.ym_2() or "").strip(),
+                "YM_3": str(input.ym_3() or "").strip(),
+                "RAC_1": str(input.rac_1() or "").strip(),
+                "RAC_2": str(input.rac_2() or "").strip(),
+                "RAC_3": str(input.rac_3() or "").strip(),
+
+                # Averages (rounded already by _avg3_or_tntc); blank if TNTC
                 "EB": None if eb_avg == TNTC_SENTINEL else float(eb_avg),
                 "YM": None if ym_avg == TNTC_SENTINEL else float(ym_avg),
                 "RAC": None if rac_avg == TNTC_SENTINEL else float(rac_avg),
+
                 "decision_result": str(result),
                 "decision_explanation": str(explanation),
                 "entered_at": dt.datetime.now().isoformat(timespec="seconds"),
