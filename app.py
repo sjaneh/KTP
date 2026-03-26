@@ -101,7 +101,7 @@ def _on_session_start():
 # --- Global branding ---
 ui.tags.head(
     ui.tags.style("""
-    .app-banner {
+.app-banner {
     position: relative;
     display: flex;
     align-items: center;
@@ -113,6 +113,7 @@ ui.tags.head(
     min-height: 110px;
 }
 
+/* Logo */
 .app-banner img {
     height: 90px;
     width: 200px;
@@ -120,14 +121,27 @@ ui.tags.head(
     flex: 0 0 auto;
 }
 
+/* Title block (centered on larger screens) */
 .app-banner .title-wrap {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     z-index: 1;
-    width: min(70%, 700px);
+    width: min(80%, 900px);   /* NOTE: you had a typo '00px' before */
     pointer-events: none;
+}
+
+/* Bigger title on laptop/desktop */
+.app-banner .title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+.app-banner .subtitle {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    line-height: 1.1;
 }
 
 /* ---------- Responsive tweaks ---------- */
@@ -143,21 +157,23 @@ ui.tags.head(
     }
 }
 
-/* Phones: shift title right + shrink logo a bit more (but not tiny) */
+/* Phones: shift title right + shrink logo (avoid overlap) */
 @media (max-width: 480px) {
     .app-banner img {
-        height: 60px;
-        width: 135px;
+        height: 58px;
+        width: 128px;
     }
 
-    /* Shift title right so it clears the logo */
     .app-banner .title-wrap {
-        left: 58%;                  /* was 50% */
-        width: 78%;
+        left: 66%;
+        width: 66%;
+        text-align: left;
+        padding-left: 6px;
     }
 
     .app-banner .title {
-        font-size: 1.05rem;         /* optional: prevent wrapping */
+        font-size: 1.05rem;
+        line-height: 1.05;
     }
     .app-banner .subtitle {
         font-size: 0.85rem;
@@ -166,6 +182,24 @@ ui.tags.head(
     .app-banner {
         min-height: 85px;
         padding: 8px 12px;
+    }
+}
+
+/* Very small phones: stack instead of absolute centering */
+@media (max-width: 360px) {
+    .app-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: unset;
+    }
+
+    .app-banner .title-wrap {
+        position: static;
+        transform: none;
+        width: 100%;
+        text-align: left;
+        padding-top: 6px;
+        pointer-events: auto;
     }
 }
     """)
