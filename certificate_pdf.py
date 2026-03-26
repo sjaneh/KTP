@@ -45,15 +45,23 @@ def make_certificate_pdf_bytes(
     footer_text = theme.get("footer_text", "")
 
     def _format_cell(col_name: str, value) -> str:
-        """Format cell values for PDF display."""
         if pd.isna(value):
             return ""
-        # Averages: force to 2dp
+
+        if col_name == "decision_result":
+            key = str(value or "").strip().title()
+            return {
+                "Green": "Good",
+                "Amber": "Unsatisfactory",
+                "Red": "Cause for Concern",
+            }.get(key, str(value))
+
         if col_name in ("EB", "YM", "RAC"):
             try:
                 return f"{float(value):.2f}"
             except Exception:
                 return str(value)
+
         return str(value)
 
     def _build_table_data(df_in: pd.DataFrame, cols: list[str], header_map: dict[str, str]) -> list[list[str]]:

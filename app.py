@@ -333,6 +333,17 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             ]
             return any(_is_tntc(v) for v in vals)
 
+        RESULT_LABELS = {
+            "Green": "Good",
+            "Amber": "Unsatisfactory",
+            "Red": "Cause for Concern",
+        }
+
+        def _display_label(result_value: str) -> str:
+            # Keep stored values as Green/Amber/Red, but display nicer labels
+            key = str(result_value or "").strip().title()  # "green" -> "Green"
+            return RESULT_LABELS.get(key, str(result_value))
+
         @render.ui
         def decision_result():
             try:
@@ -359,13 +370,14 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 "Red": "#c62828",
             }
             color = color_map.get(str(result), "#333333")
+            display_result = _display_label(result)
 
             return ui.div(
                 ui.div(
                     f"Averages → EB: {_fmt_avg(eb_avg)}, YM: {_fmt_avg(ym_avg)}, RAC: {_fmt_avg(rac_avg)}",
                     style="margin-bottom: 0.5rem; color: #333333;",
                 ),
-                ui.div(str(result), style=f"color: {color}; font-weight: 700; font-size: 1.2rem;"),
+                ui.div(display_result, style=f"color: {color}; font-weight: 700; font-size: 1.2rem;"),
                 ui.div(str(explanation), style="margin-top: 0.25rem; color: #333333;"),
                 style="margin-top: 1rem;",
             )
@@ -386,7 +398,12 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             # show a friendly subset first
             cols = ["material_name", "test_date", "material_type", "EB", "YM", "RAC", "decision_result"]
             cols = [c for c in cols if c in df.columns]
-            return df[cols]
+
+            out = df[cols].copy()
+            if "decision_result" in out.columns:
+                out["decision_result"] = out["decision_result"].map(_display_label)
+
+            return out
         
 
         ui.input_action_button("results_completed", "Results completed")
@@ -544,6 +561,10 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             try:
                 # You can switch this to HTML template later; for now simple summary
                 subject = "Your test results summary"
+                df_email = df.copy()
+                if "decision_result" in df_email.columns:
+                    df_email["decision_result"] = df_email["decision_result"].map(_display_label)
+
                 body_text = (
                     f"Hello,\n\n"
                     f"Your results have been submitted.\n\n"
@@ -551,7 +572,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                     f"Uploaded file: {filename}\n"
                     f"Number of rows: {len(df)}\n\n"
                     f"Summary:\n"
-                    f"{df[['material_name','test_date','decision_result']].head(50).to_string(index=False)}\n"
+                    f"{df_email[['material_name','test_date','decision_result']].head(50).to_string(index=False)}\n"
                 )
 
                 send_results_email(
