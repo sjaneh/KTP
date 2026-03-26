@@ -313,9 +313,9 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.input_text("material_name", "Material name", placeholder="e.g. Sample A / Product XYZ")
         ui.input_date("test_date", "Date of test", value=dt.date.today())
 
-        ui.h4("Select material type")
-
         ui.input_radio_buttons(
+            "material_type",
+            "Select material type",
             choices={
                 "Natural or Mixed": "Natural or Mixed Fibre Materials",
                 "Synthetic": "Synthetic Fibre and Foam Materials",
