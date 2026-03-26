@@ -158,7 +158,7 @@ ui.tags.head(
     }
 
 /* Add spacing between radio button options */
-#material_type .form-check {
+#material_type .shiny-options-group .form-check {
     margin-bottom: 0.5rem;   /* increase/decrease to taste */
 }
 }
