@@ -156,6 +156,11 @@ ui.tags.head(
     .app-banner img {
         width: clamp(120px, 45vw, 180px);
     }
+
+/* Add spacing between radio button options */
+#material_type .form-check {
+    margin-bottom: 0.5rem;   /* increase/decrease to taste */
+}
 }
     """)
 )
