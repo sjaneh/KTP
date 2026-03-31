@@ -716,19 +716,35 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             return big
 
 
-        # Server-rendered selects (so they update based on uploaded CSVs)
+        
         @render.ui
         def metric_select():
             df = my_uploads_df()
             if df.empty:
-                choices = ["(no numeric columns)"]
-            else:
-                exclude = {"_uploaded_filename", "_upload_time", "_upload_time_dt"}
-                avg_cols = ["EB", "YM", "RAC"]
-                choices = [c for c in avg_cols if c in df.columns and pd.api.types.is_numeric_dtype(df[c])]
-                if not choices:
-                    choices = ["(no numeric columns)"]
-            return ui.input_select("metric", "Select results to plot", choices=choices)
+                return ui.input_checkbox_group(
+                    "metrics",
+                    "Select metrics to plot",
+                    choices={"(no data)": "(no data)"},
+                    selected=[],
+                )
+
+            avg_cols = ["EB", "YM", "RAC"]
+            choices = [c for c in avg_cols if c in df.columns and pd.api.types.is_numeric_dtype(df[c])]
+
+            if not choices:
+                return ui.input_checkbox_group(
+                    "metrics",
+                    "Select metrics to plot",
+                    choices={"(no numeric columns)": "(no numeric columns)"},
+                    selected=[],
+                )
+
+            return ui.input_checkbox_group(
+                "metrics",
+                "Select metrics to plot",
+                choices=choices,
+                selected=choices,
+            )
 
         
 
@@ -773,25 +789,27 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 ax.set_axis_off()
                 return fig
 
-            metric = input.metric()
             rowval = input.rowval() or ""
 
             exclude = {"_uploaded_filename", "_upload_time", "_upload_time_dt"}
             id_cols = [c for c in df.columns if c not in exclude and not pd.api.types.is_numeric_dtype(df[c])]
-    
+
             if not id_cols:
                 fig, ax = plt.subplots()
                 ax.text(0.5, 0.5, "No identifier columns found", ha="center", va="center")
                 ax.set_axis_off()
                 return fig
-    
-            rid = id_cols[0]
 
-            if not metric or metric == "(no numeric columns)":
-                numeric_cols = [c for c in df.columns if c not in {"_uploaded_filename", "_upload_time", "_upload_time_dt"} and pd.api.types.is_numeric_dtype(df[c])]
-                plot_cols = numeric_cols
-            else:
-                plot_cols = [metric]
+            rid = id_cols[0] 
+
+            metrics = list(input.metrics() or []) 
+            plot_cols = [m for m in metrics if m in {"EB", "YM", "RAC"}]
+
+            if not plot_cols:
+                fig, ax = plt.subplots()
+                ax.text(0.5, 0.5, "Select one or more metrics (EB, YM, RAC) to plot.", ha="center", va="center")
+                ax.set_axis_off()
+                return fig
 
             if not plot_cols:
                 fig, ax = plt.subplots()
