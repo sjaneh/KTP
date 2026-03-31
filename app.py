@@ -785,8 +785,8 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             df = my_uploads_df()
             if df.empty:
                 for c in ["EB", "YM", "RAC"]:
-                if c in df.columns:
-                    df[c] = pd.to_numeric(df[c], errors="coerce")
+                    if c in df.columns:
+                        df[c] = pd.to_numeric(df[c], errors="coerce")
                 fig, ax = plt.subplots()
                 ax.text(0.5, 0.5, "No data to plot", ha="center", va="center")
                 ax.set_axis_off()
