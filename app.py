@@ -724,27 +724,26 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 choices = ["(no numeric columns)"]
             else:
                 exclude = {"_uploaded_filename", "_upload_time", "_upload_time_dt"}
-                numeric_cols = [c for c in df.columns if c not in exclude and pd.api.types.is_numeric_dtype(df[c])]
-                choices = numeric_cols or ["(no numeric columns)"]
-            return ui.input_select("metric", "Select metric to plot", choices=choices)
+                avg_cols = ["EB", "YM", "RAC"]
+                choices = [c for c in avg_cols if c in df.columns and pd.api.types.is_numeric_dtype(df[c])]
+                if not choices:
+                    choices = ["(no numeric columns)"]
+            return ui.input_select("metric", "Select results to plot", choices=choices)
 
         
 
         @render.ui
         def rowval_select():
-             # Get unique values from the first non-numeric column found
             df = my_uploads_df()
             if df.empty:
                 return ui.input_select("rowval", "Sample Identifier", choices=["(no values)"])
     
-            # Find the first non-numeric column to use as identifier
             exclude = {"_uploaded_filename", "_upload_time", "_upload_time_dt"}
             id_cols = [c for c in df.columns if c not in exclude and not pd.api.types.is_numeric_dtype(df[c])]
     
             if not id_cols:
                 return ui.input_select("rowval", "Sample Identifier", choices=["(no values)"])
     
-            # Use the first identifier column
             rid = id_cols[0]
             try:
                 vals = df[rid].dropna().astype(str).unique().tolist()
@@ -777,7 +776,6 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             metric = input.metric()
             rowval = input.rowval() or ""
 
-    # Find the first non-numeric column to use as identifier
             exclude = {"_uploaded_filename", "_upload_time", "_upload_time_dt"}
             id_cols = [c for c in df.columns if c not in exclude and not pd.api.types.is_numeric_dtype(df[c])]
     
@@ -789,7 +787,6 @@ with ui.navset_bar(title="Menu", id="main_nav"):
     
             rid = id_cols[0]
 
-    # prepare plotting columns
             if not metric or metric == "(no numeric columns)":
                 numeric_cols = [c for c in df.columns if c not in {"_uploaded_filename", "_upload_time", "_upload_time_dt"} and pd.api.types.is_numeric_dtype(df[c])]
                 plot_cols = numeric_cols
@@ -802,10 +799,9 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 ax.set_axis_off()
                 return fig
 
-    # apply row-name filtering if both selected and valid
             df_plot = df
             if rid and rid in df.columns and rowval and rowval != "(no values)":
-        # compare as strings to avoid dtype issues
+  
                 df_plot = df_plot[df_plot[rid].astype(str) == str(rowval)]
 
             if df_plot.empty:
