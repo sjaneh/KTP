@@ -845,8 +845,8 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 sub = sub.sort_values(by=time_col)
                 color_map = {
                 "EB": "#d81b60",   # magenta
-                "YM": "#2e7d32",   # green
-                "RAC": "#d4a017",  # mustard yellow
+                "YM": "#cd32cd",   # green
+                "RAC": "#ffda03",  # mustard yellow
             }
                 ax.plot(
                     sub[time_col],
