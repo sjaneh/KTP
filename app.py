@@ -843,7 +843,18 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 if sub.empty:
                     continue
                 sub = sub.sort_values(by=time_col)
-                ax.plot(sub[time_col], sub[col], marker="o", label=col)
+                color_map = {
+                "EB": "#d81b60",   # magenta
+                "YM": "#2e7d32",   # green
+                "RAC": "#d4a017",  # mustard yellow
+            }
+                ax.plot(
+                    sub[time_col],
+                    sub[col],
+                    marker="o",
+                    label=col,
+                    color=color_map.get(col, None),
+                )
 
             ax.legend()
             ax.set_xlabel(x_label)
