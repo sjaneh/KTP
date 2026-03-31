@@ -729,7 +729,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 )
 
             avg_cols = ["EB", "YM", "RAC"]
-            choices = [c for c in avg_cols if c in df.columns and pd.api.types.is_numeric_dtype(df[c])]
+            choices = [c for c in avg_cols if c in df.columns]
 
             if not choices:
                 return ui.input_checkbox_group(
@@ -784,10 +784,15 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         def results_plot():
             df = my_uploads_df()
             if df.empty:
+                for c in ["EB", "YM", "RAC"]:
+                if c in df.columns:
+                    df[c] = pd.to_numeric(df[c], errors="coerce")
                 fig, ax = plt.subplots()
                 ax.text(0.5, 0.5, "No data to plot", ha="center", va="center")
                 ax.set_axis_off()
                 return fig
+
+
 
             rowval = input.rowval() or ""
 
@@ -837,17 +842,19 @@ with ui.navset_bar(title="Menu", id="main_nav"):
 
             fig, ax = plt.subplots(figsize=(8, 4 + 0.6 * len(plot_cols)))
 
+            color_map = {
+                "EB": "#d81b60",   # magenta
+                "YM": "#5bb450",   # green
+                "RAC": "#ffda03",  # mustard yellow
+            }
+
             for col in plot_cols:
                 sub = df_plot[[time_col, col]].copy()
                 sub = sub.dropna(subset=[col, time_col])
                 if sub.empty:
                     continue
                 sub = sub.sort_values(by=time_col)
-                color_map = {
-                "EB": "#d81b60",   # magenta
-                "YM": "#5bb450",   # green
-                "RAC": "#ffda03",  # mustard yellow
-            }
+               
                 ax.plot(
                     sub[time_col],
                     sub[col],
