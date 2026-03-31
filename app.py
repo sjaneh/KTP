@@ -310,7 +310,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.h4("2. Press 'Enter' after each sample")
         ui.h4("3. Once all results are entered press 'Results Complete' to recieve your automatically generated certificate.")
 
-        ui.input_text("material_name", "Material name", placeholder="e.g. Sample A / Product XYZ")
+        ui.input_text("material_name", "Material name (Case sensitive)", placeholder="e.g. Sample A / Product XYZ")
         ui.input_date("test_date", "Date of test", value=dt.date.today())
 
         ui.h4("Select Material Category")
