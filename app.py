@@ -504,11 +504,6 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 ui.notification_show("Please enter valid numbers for all replicates (or TNTC).", type="error")
                 return
 
-            mat_type = (input.material_type() or "").strip().lower()
-            if mat_type not in ("natural", "synthetic"):
-                ui.notification_show("Please select a Material category (Natural/Mixed or Synthetic).", type="error")
-                return
-
             if _any_tntc_in_replicates():
                 result = "Red"
                 explanation = "TNTC was entered for at least one replicate."
