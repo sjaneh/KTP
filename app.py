@@ -435,8 +435,11 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.hr()
         ui.h4("Results entered this session")
 
-        ui.input_text("delete_row_idx", "", value="", width="1px")
-        ui.input_text("delete_row_evt", "", value="", width="1px")
+        ui.tags.div(
+            ui.input_text("delete_row_idx", "", value="", width="1px"),
+            ui.input_text("delete_row_evt", "", value="", width="1px"),
+            style="display:none;",
+        )
 
         @render.ui
         def entered_results_table():
@@ -447,9 +450,18 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             show_cols = ["material_name", "test_date", "material_type", "EB", "YM", "RAC", "decision_result"]
             show_cols = [c for c in show_cols if c in df.columns]
 
+            header_labels = {
+                "EB": "EB",
+                "YM": "YM",
+                "RAC": "RAC",
+                "material_name": "Material Name",
+                "test_date": "Test Date",
+                "material_type": "Material Type",
+                "decision_result": "Decision Result",
+            }
 
             header = ui.tags.tr(
-                *[ui.tags.th(c.replace("_", " ").title()) for c in show_cols],
+                *[ui.tags.th(header_labels.get(c, c.replace("_", " ").title())) for c in show_cols],
                 ui.tags.th("")
             )
 
