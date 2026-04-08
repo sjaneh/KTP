@@ -429,21 +429,69 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.hr()
         ui.h4("Results entered this session")
 
-        @render.data_frame
+        @render.ui
         def entered_results_table():
             df = entered_results.get()
             if df.empty:
-                return pd.DataFrame({"Status": ["No rows entered yet."]})
-            # show a friendly subset first
-            cols = ["material_name", "test_date", "material_type", "EB", "YM", "RAC", "decision_result"]
-            cols = [c for c in cols if c in df.columns]
+                return ui.div("No rows entered yet.")
 
-            out = df[cols].copy()
-            if "decision_result" in out.columns:
-                out["decision_result"] = out["decision_result"].map(_display_label)
+            show_cols = ["material_name", "test_date", "material_type", "EB", "YM", "RAC", "decision_result"]
+            show_cols = [c for c in show_cols if c in df.columns]
 
-            return out
+
+            header = ui.tags.tr(
+                *[ui.tags.th(c.replace("_", " ").title()) for c in show_cols],
+                ui.tags.th("")
+            )
+
+            rows = []
+            for i, row in df.reset_index(drop=True).iterrows():
+
+                decision_val = row.get("decision_result")
+                decision_disp = _display_label(decision_val) if "decision_result" in show_cols else ""
+
+                cells = []
+                for c in show_cols:
+                    if c == "decision_result":
+                        cells.append(ui.tags.td(str(decision_disp)))
+                    else:
+                        cells.append(ui.tags.td(str(row.get(c, ""))))
+
+                btn_id = f"del_row_{i}"
+                cells.append(
+                    ui.tags.td(
+                        ui.input_action_button(
+                            btn_id,
+                            "🗑",
+                            class_="btn btn-link p-0",
+                        )
+                    )
+                )
+                rows.append(ui.tags.tr(*cells))
+
+            return ui.tags.table(
+                {"class": "table table-sm table-striped align-middle"},
+                ui.tags.thead(header),
+                ui.tags.tbody(*rows),
+            )
         
+        @reactive.effect
+        def _handle_row_deletes():
+            df = entered_results.get()
+            if df.empty:
+                return
+
+            for i in range(len(df)):
+                btn_id = f"del_row_{i}"
+                if not hasattr(input, btn_id):
+                    continue
+
+                clicks = getattr(input, btn_id)() or 0
+                if clicks > 0:
+                    new_df = df.drop(df.index[i]).reset_index(drop=True)
+
+                    entered_results.set(new_df)
+                    return
 
         ui.input_action_button("results_completed", "Results completed")
         
