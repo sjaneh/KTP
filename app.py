@@ -476,37 +476,39 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 ui.tags.tbody(*rows),
             )
         
-        @reactive.effect
-        def _handle_row_deletes():
-            df = entered_results.get()
-            if df.empty:
-                delete_clicks_seen.set({})
-                return
+            delete_clicks_seen = reactive.Value({})
 
-            seen = delete_clicks_seen.get() or {}
-
-            for i in range(len(df)):
-                btn_id = f"del_row_{i}"
-                if not hasattr(input, btn_id):
-                    continue
-
-                clicks = getattr(input, btn_id)() or 0
-                prev = seen.get(btn_id, 0)
-
-                # Only act on NEW clicks for this button
-                if clicks > prev:
-                    # record click so it doesn't fire again
-                    seen[btn_id] = clicks
-                    delete_clicks_seen.set(seen)
-
-                    new_df = df.drop(df.index[i]).reset_index(drop=True)
-                    entered_results.set(new_df)
-
-                    # after deletion indices/button ids change; reset tracking
+            @reactive.effect
+            def _handle_row_deletes():
+                df = entered_results.get()
+                if df.empty:
                     delete_clicks_seen.set({})
                     return
 
-            delete_clicks_seen.set(seen)
+                seen = delete_clicks_seen.get() or {}
+
+                for i in range(len(df)):
+                    btn_id = f"del_row_{i}"
+                    if not hasattr(input, btn_id):
+                        continue
+
+                    clicks = getattr(input, btn_id)() or 0
+                    prev = seen.get(btn_id, 0)
+
+                # Only act on NEW clicks for this button
+                    if clicks > prev:
+                    # record click so it doesn't fire again
+                        seen[btn_id] = clicks
+                        delete_clicks_seen.set(seen)
+
+                        new_df = df.drop(df.index[i]).reset_index(drop=True)
+                        entered_results.set(new_df)
+
+                    # after deletion indices/button ids change; reset tracking
+                        delete_clicks_seen.set({})
+                        return
+
+                delete_clicks_seen.set(seen)
 
         ui.input_action_button("results_completed", "Results completed")
         
@@ -523,7 +525,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             "decision_explanation",
             "entered_at",
         ]))
-        delete_clicks_seen = reactive.Value({})
+        
         
 
         @reactive.effect
