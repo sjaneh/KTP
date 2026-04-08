@@ -67,21 +67,12 @@ def _sha256_file(path: str) -> str:
 
 # ---------- Load decision rules (optional JSON config) ----------
 @reactive.calc
-def decision_rules():
-    choice = input.material_type() if hasattr(input, "material_type") else "natural"
-
-    if choice == "synthetic":
-        path = SYNTHETIC_FIBRES_RULES_JSON
-    else:
-        path = NATURAL_FIBRES_RULES_JSON
-
-    cfg = read_json(DRIVE_ID, path)
-    return cfg or {}
-
 def decision_rules_for(material_type: str) -> dict:
     mt = (material_type or "").strip().lower()
-    if mt == "synthetic":
+    if mt == "Synthetic or Foam":
         path = SYNTHETIC_FIBRES_RULES_JSON
+    elif mt == "Natural or Mixed":
+        path = NATURAL_FIBRES_RULES_JSON
     else:
         path = NATURAL_FIBRES_RULES_JSON
     cfg = read_json(DRIVE_ID, path)
@@ -487,7 +478,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
 
             mat_type = (input.material_type() or "").strip()
             if mat_type not in ("Natural or Mixed", "Synthetic and Foam"):
-                ui.notification_show("Please select a Material category (Natural/Mixed or Synthetic).", type="error")
+                ui.notification_show("Please select a Material category (Natural or Mixed / Synthetic or Foam).", type="error")
                 return
 
             # date comes back as datetime.date

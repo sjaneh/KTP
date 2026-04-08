@@ -113,13 +113,13 @@ def make_certificate_pdf_bytes(
     # Columns and header labels
     # --------------------------
     replicates_cols_all = [
-        "material_name", "test_date",
+        "material_name", "material_type", "test_date",
         "EB_1", "EB_2", "EB_3",
         "YM_1", "YM_2", "YM_3",
         "RAC_1", "RAC_2", "RAC_3",
     ]
     summary_cols_all = [
-        "material_name", "test_date",
+        "material_name", "material_type", "test_date",
         "EB", "YM", "RAC",
         "decision_result",
     ]
@@ -132,6 +132,7 @@ def make_certificate_pdf_bytes(
 
     header_map = {
         "material_name": "Material",
+        "material_type": "Category",
         "test_date": "Test date",
 
         "EB_1": "EB r1", "EB_2": "EB r2", "EB_3": "EB r3",
