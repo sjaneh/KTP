@@ -68,7 +68,7 @@ def _sha256_file(path: str) -> str:
 # ---------- Load decision rules (optional JSON config) ----------
 @reactive.calc
 def decision_rules_for(material_type: str) -> dict:
-    mt = (material_type or "").strip().lower()
+    mt = (material_type or "").strip()
     if mt == "Synthetic or Foam":
         path = SYNTHETIC_FIBRES_RULES_JSON
     elif mt == "Natural or Mixed":
@@ -393,7 +393,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 result = "Red"
                 explanation = "TNTC was entered for at least one replicate."
             else:
-                mat_type = (input.material_type() or "").strip().lower()
+                mat_type = (input.material_type() or "").strip()
                 if mat_type not in ("Natural or Mixed", "Synthetic or Foam"):
                     return ui.div("Please select a Material category.", style="color: #b00020;")
 
@@ -477,7 +477,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 return
 
             mat_type = (input.material_type() or "").strip()
-            if mat_type not in ("Natural or Mixed", "Synthetic and Foam"):
+            if mat_type not in ("Natural or Mixed", "Synthetic or Foam"):
                 ui.notification_show("Please select a Material category (Natural or Mixed / Synthetic or Foam).", type="error")
                 return
 
