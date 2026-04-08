@@ -190,6 +190,13 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.h3("Welcome")
         ui.p("Create a new account or sign in to continue.")
 
+        # --- Sign-in ---
+        ui.h4("Existing users: Sign in")
+        ui.input_text("login_email", "Email")
+        ui.input_password("login_password", "Password")
+        ui.input_action_button("login_btn", "Sign in")
+
+        ui.hr()
         # --- Sign-up ---
         ui.h4("Create account + Activate")
         ui.input_text("reg_email", "Email")
@@ -197,13 +204,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.input_text("reg_key", "Product key")
         ui.input_action_button("reg_btn", "Create & Activate")
 
-        ui.hr()
-
-        # --- Sign-in ---
-        ui.h4("Existing users: Sign in")
-        ui.input_text("login_email", "Email")
-        ui.input_password("login_password", "Password")
-        ui.input_action_button("login_btn", "Sign in")
+        
 
         # ------ Handlers ------
 
@@ -522,7 +523,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             new_row = pd.DataFrame([{
                 "material_name": name,
                 "test_date": str(test_date),
-                "material_type": mat_type(),
+                "material_type": mat_type,
 
                 # Replicates (stored exactly as user typed, trimmed)
                 "EB_1": str(input.eb_1() or "").strip(),
