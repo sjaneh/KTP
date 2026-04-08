@@ -25,7 +25,7 @@ def make_certificate_pdf_bytes(
     *,
     user_email: str,
     issued_on: dt.date,
-    issued_at: dt.datetime
+    issued_at: dt.datetime,
     results_df: pd.DataFrame,
     logo_png_bytes: bytes | None,
     theme: dict[str, Any] | None = None,
