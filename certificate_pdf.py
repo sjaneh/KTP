@@ -25,6 +25,7 @@ def make_certificate_pdf_bytes(
     *,
     user_email: str,
     issued_on: dt.date,
+    issued_at: dt.datetime
     results_df: pd.DataFrame,
     logo_png_bytes: bytes | None,
     theme: dict[str, Any] | None = None,
@@ -194,6 +195,8 @@ def make_certificate_pdf_bytes(
     c.drawString(12 * mm, y, f"Issued to: {user_email}")
     y -= 6 * mm
     c.drawString(12 * mm, y, f"Issued on: {issued_on.isoformat()}")
+    y -= 6 * mm
+    c.drawString(12 * mm, y, f"Issued at: {issued_at.strftime('%H:%M:%S')}")
     y -= 10 * mm
 
     # Accent line
