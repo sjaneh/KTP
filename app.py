@@ -327,8 +327,8 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             "material_type",
             "",
             choices={
-                "natural": "Natural or Mixed Fibre Materials",
-                "synthetic": "Synthetic Fibre and Foam Materials",
+                "Natural or Mixed": "Natural or Mixed Fibre Materials",
+                "Synthetic or Foam": "Synthetic Fibre and Foam Materials",
             },
             selected=None,
         )
@@ -403,7 +403,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 explanation = "TNTC was entered for at least one replicate."
             else:
                 mat_type = (input.material_type() or "").strip().lower()
-                if mat_type not in ("natural", "synthetic"):
+                if mat_type not in ("Natural or Mixed", "Synthetic or Foam"):
                     return ui.div("Please select a Material category.", style="color: #b00020;")
 
                 rules = decision_rules_for(mat_type)
@@ -486,7 +486,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 return
 
             mat_type = (input.material_type() or "").strip()
-            if mat_type not in ("natural", "synthetic"):
+            if mat_type not in ("Natural or Mixed", "Synthetic and Foam"):
                 ui.notification_show("Please select a Material category (Natural/Mixed or Synthetic).", type="error")
                 return
 
