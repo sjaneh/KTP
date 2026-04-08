@@ -68,7 +68,6 @@ def _sha256_file(path: str) -> str:
 # ---------- Load decision rules (optional JSON config) ----------
 @reactive.calc
 def decision_rules():
-    # Default to natural if missing (e.g., before UI initializes)
     choice = input.material_type() if hasattr(input, "material_type") else "natural"
 
     if choice == "synthetic":
@@ -79,6 +78,14 @@ def decision_rules():
     cfg = read_json(DRIVE_ID, path)
     return cfg or {}
 
+def decision_rules_for(material_type: str) -> dict:
+    mt = (material_type or "").strip().lower()
+    if mt == "synthetic":
+        path = SYNTHETIC_FIBRES_RULES_JSON
+    else:
+        path = NATURAL_FIBRES_RULES_JSON
+    cfg = read_json(DRIVE_ID, path)
+    return cfg or {}
 
 # ---------- NAVIGATION & SECURITY ----------
 def _protect_tabs_initial():
@@ -319,8 +326,8 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             "material_type",
             "",
             choices={
-                "Natural or Mixed": "Natural or Mixed Fibre Materials",
-                "Synthetic": "Synthetic Fibre and Foam Materials",
+                "natural": "Natural or Mixed Fibre Materials",
+                "synthetic": "Synthetic Fibre and Foam Materials",
             },
             selected=None,
         )
@@ -394,7 +401,11 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 result = "Red"
                 explanation = "TNTC was entered for at least one replicate."
             else:
-                rules = decision_rules()
+                mat_type = (input.material_type() or "").strip().lower()
+                if mat_type not in ("natural", "synthetic"):
+                    return ui.div("Please select a Material category.", style="color: #b00020;")
+
+                rules = decision_rules_for(mat_type)
                 result, explanation = decision_logic.evaluate_triplet(
                     [float(eb_avg), float(ym_avg), float(rac_avg)],
                     rules,
@@ -492,11 +503,16 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 ui.notification_show("Please enter valid numbers for all replicates (or TNTC).", type="error")
                 return
 
+            mat_type = (input.material_type() or "").strip().lower()
+            if mat_type not in ("natural", "synthetic"):
+                ui.notification_show("Please select a Material category (Natural/Mixed or Synthetic).", type="error")
+                return
+
             if _any_tntc_in_replicates():
                 result = "Red"
                 explanation = "TNTC was entered for at least one replicate."
             else:
-                rules = decision_rules()
+                rules = decision_rules_for(mat_type)
                 result, explanation = decision_logic.evaluate_triplet(
                     [float(eb_avg), float(ym_avg), float(rac_avg)],
                     rules,
@@ -506,7 +522,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             new_row = pd.DataFrame([{
                 "material_name": name,
                 "test_date": str(test_date),
-                "material_type": input.material_type(),
+                "material_type": mat_type(),
 
                 # Replicates (stored exactly as user typed, trimmed)
                 "EB_1": str(input.eb_1() or "").strip(),
@@ -555,6 +571,9 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             df = entered_results.get()
             if df.empty:
                 ui.notification_show("No results to submit.", type="error")
+                return
+            if "material_type" not in df.columns or (df["material_type"].astype(str).str.strip() == "").any():
+                ui.notification_show("Cannot submit: one or more rows are missing a Material category.", type="error")
                 return
 
             # --- Upload to OneDrive (so My results page continues to work) ---
