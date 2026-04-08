@@ -464,6 +464,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                             btn_id,
                             "🗑",
                             class_="btn btn-link p-0",
+                            style="font-size: 1.3rem; line-height: 1;",
                         )
                     )
                 )
@@ -479,7 +480,10 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         def _handle_row_deletes():
             df = entered_results.get()
             if df.empty:
+                delete_clicks_seen.set({})
                 return
+
+            seen = delete_clicks_seen.get() or {}
 
             for i in range(len(df)):
                 btn_id = f"del_row_{i}"
@@ -487,11 +491,23 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                     continue
 
                 clicks = getattr(input, btn_id)() or 0
-                if clicks > 0:
-                    new_df = df.drop(df.index[i]).reset_index(drop=True)
+                prev = seen.get(btn_id, 0)
 
+                # Only handle a NEW click for this button
+                if clicks > prev:
+                    # record the click so we don't re-handle it
+                    seen[btn_id] = clicks
+                    delete_clicks_seen.set(seen)
+
+                    # delete exactly this row
+                    new_df = df.drop(df.index[i]).reset_index(drop=True)
                     entered_results.set(new_df)
+
+                    # row indices (and button ids) change after deletion
+                    delete_clicks_seen.set({})
                     return
+
+            delete_clicks_seen.set(seen)
 
         ui.input_action_button("results_completed", "Results completed")
         
@@ -508,7 +524,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             "decision_explanation",
             "entered_at",
         ]))
-
+        delete_clicks_seen = reactive.Value({})
         
 
         @reactive.effect
