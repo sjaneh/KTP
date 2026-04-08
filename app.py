@@ -159,6 +159,11 @@ ui.tags.head(
 #material_type .shiny-options-group .form-check {
     margin-bottom: 0.5rem;   /* increase/decrease to taste */
 }
+
+/* Hide the delete row index helper input (used by bin buttons) */
+#delete_row_idx {
+    display: none !important;
+}
 }
     """)
 )
@@ -429,7 +434,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.hr()
         ui.h4("Results entered this session")
 
-        ui.input_text("delete_row_idx", "", value="", width="1px", style="display:none;")
+        ui.input_text("delete_row_idx", "", value="", width="1px")
 
         @render.ui
         def entered_results_table():
