@@ -486,7 +486,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 return
 
             mat_type = (input.material_type() or "").strip()
-            if mat_type not in ("Natural or Mixed", "Synthetic"):
+            if mat_type not in ("natural", "synthetic"):
                 ui.notification_show("Please select a Material category (Natural/Mixed or Synthetic).", type="error")
                 return
 
