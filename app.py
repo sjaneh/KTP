@@ -429,6 +429,9 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.hr()
         ui.h4("Results entered this session")
 
+        ui.input_text("delete_row_idx", "", value="", width="1px")
+        ui.input_action_button("delete_row", "", style="display:none;")
+
         @render.ui
         def entered_results_table():
             df = entered_results.get()
@@ -457,14 +460,21 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                     else:
                         cells.append(ui.tags.td(str(row.get(c, ""))))
 
-                btn_id = f"del_row_{i}"
                 cells.append(
                     ui.tags.td(
-                        ui.input_action_button(
-                            btn_id,
+                        ui.tags.button(
                             "🗑",
-                            class_="btn btn-link p-0",
-                            style="font-size: 1.3rem; line-height: 1;",
+                            {
+                                "type": "button",
+                                "class": "btn btn-link p-0",
+                                "style": "font-size: 1.4rem; line-height: 1;",
+                                "onclick": f"""
+                                    const el = document.getElementById('delete_row_idx');
+                                    if (el) el.value = '{i}';
+                                    const btn = document.getElementById('delete_row');
+                                    if (btn) btn.click();
+                                """,
+                            },
                         )
                     )
                 )
@@ -476,39 +486,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 ui.tags.tbody(*rows),
             )
         
-        delete_clicks_seen = reactive.Value({})
-
-        @reactive.effect
-        def _handle_row_deletes():
-            df = entered_results.get()
-            if df.empty:
-                delete_clicks_seen.set({})
-                return
-
-            seen = delete_clicks_seen.get() or {}
-
-            for i in range(len(df)):
-                btn_id = f"del_row_{i}"
-                if not hasattr(input, btn_id):
-                    continue
-
-                clicks = getattr(input, btn_id)() or 0
-                prev = seen.get(btn_id, 0)
-
-                # Only act on NEW clicks for this button
-                if clicks > prev:
-                    # record click so it doesn't fire again
-                    seen[btn_id] = clicks
-                    delete_clicks_seen.set(seen)
-
-                    new_df = df.drop(df.index[i]).reset_index(drop=True)
-                    entered_results.set(new_df)
-
-                    # after deletion indices/button ids change; reset tracking
-                    delete_clicks_seen.set({})
-                    return
-
-            delete_clicks_seen.set(seen)
+        
 
         ui.input_action_button("results_completed", "Results completed")
         
@@ -526,7 +504,23 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             "entered_at",
         ]))
         
-        
+        @reactive.effect
+        @reactive.event(input.delete_row)
+        def _delete_row():
+            df = entered_results.get()
+            if df.empty:
+                return
+
+            idx_raw = (input.delete_row_idx() or "").strip()
+            try:
+                i = int(idx_raw)
+            except Exception:
+                return
+
+            if i < 0 or i >= len(df):
+                return
+
+            entered_results.set(df.drop(df.index[i]).reset_index(drop=True))
 
         @reactive.effect
         @reactive.event(input.enter_result)
