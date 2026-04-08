@@ -322,7 +322,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 "Natural or Mixed": "Natural or Mixed Fibre Materials",
                 "Synthetic": "Synthetic Fibre and Foam Materials",
             },
-            selected="natural",
+            selected=None,
         )
 
         ui.h5("Enterobacteriaceae (EB) replicates")
@@ -377,8 +377,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         }
 
         def _display_label(result_value: str) -> str:
-            # Keep stored values as Green/Amber/Red, but display nicer labels
-            key = str(result_value or "").strip().title()  # "green" -> "Green"
+            key = str(result_value or "").strip().title()  
             return RESULT_LABELS.get(key, str(result_value))
 
         @render.ui
@@ -472,6 +471,11 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             name = (input.material_name() or "").strip()
             if not name:
                 ui.notification_show("Please enter a material name.", type="error")
+                return
+
+            mat_type = (input.material_type() or "").strip()
+            if mat_type not in ("Natural or Mixed", "Synthetic"):
+                ui.notification_show("Please select a Material category (Natural/Mixed or Synthetic).", type="error")
                 return
 
             # date comes back as datetime.date
@@ -584,9 +588,11 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             except Exception as ex:
                 print("CERT: theme json read failed:", ex)
 
+            now = dt.datetime.now()
             pdf_bytes = make_certificate_pdf_bytes(
                 user_email=email,
-                issued_on=dt.date.today(),
+                issued_on=now.date(),
+                issued_at=now,
                 results_df=df,
                 logo_png_bytes=logo_bytes,
                 theme=theme,
