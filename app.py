@@ -66,7 +66,7 @@ def _sha256_file(path: str) -> str:
 
 
 # ---------- Load decision rules (optional JSON config) ----------
-@reactive.calc
+
 def decision_rules_for(material_type: str) -> dict:
     mt = (material_type or "").strip()
     if mt == "Synthetic or Foam":
