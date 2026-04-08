@@ -594,11 +594,10 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             except Exception as ex:
                 print("CERT: theme json read failed:", ex)
 
-            now = dt.datetime.now()
+            
             pdf_bytes = make_certificate_pdf_bytes(
                 user_email=email,
-                issued_on=now.date(),
-                issued_at=now,
+                issued_on=dt.date.today(),
                 results_df=df,
                 logo_png_bytes=logo_bytes,
                 theme=theme,

@@ -25,7 +25,6 @@ def make_certificate_pdf_bytes(
     *,
     user_email: str,
     issued_on: dt.date,
-    issued_at: dt.datetime,
     results_df: pd.DataFrame,
     logo_png_bytes: bytes | None,
     theme: dict[str, Any] | None = None,
@@ -81,7 +80,9 @@ def make_certificate_pdf_bytes(
         widths: list[float] = []
         for cn in cols:
             if cn == "material_name":
-                widths.append(table_w * (0.22 if mode == "replicates" else 0.35))
+                widths.append(table_w * (0.22 if mode == "replicates" else 0.30))
+            elif cn == "material_type":
+                widths.append(table_w * (0.16 if mode == "replicates" else 0.22))
             elif cn == "test_date":
                 widths.append(table_w * (0.12 if mode == "replicates" else 0.18))
             elif cn == "decision_result":
@@ -196,9 +197,8 @@ def make_certificate_pdf_bytes(
     c.drawString(12 * mm, y, f"Issued to: {user_email}")
     y -= 6 * mm
     c.drawString(12 * mm, y, f"Issued on: {issued_on.isoformat()}")
-    y -= 6 * mm
-    c.drawString(12 * mm, y, f"Issued at: {issued_at.strftime('%H:%M:%S')}")
     y -= 10 * mm
+    
 
     # Accent line
     c.setStrokeColor(accent)
