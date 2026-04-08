@@ -493,15 +493,19 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 clicks = getattr(input, btn_id)() or 0
                 prev = seen.get(btn_id, 0)
 
+                # Only act on NEW clicks for this button
                 if clicks > prev:
-                    
+                    # record click so it doesn't fire again
                     seen[btn_id] = clicks
                     delete_clicks_seen.set(seen)
+
                     new_df = df.drop(df.index[i]).reset_index(drop=True)
                     entered_results.set(new_df)
 
+                    # after deletion indices/button ids change; reset tracking
                     delete_clicks_seen.set({})
                     return
+
             delete_clicks_seen.set(seen)
 
         ui.input_action_button("results_completed", "Results completed")
