@@ -430,7 +430,6 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.h4("Results entered this session")
 
         ui.input_text("delete_row_idx", "", value="", width="1px", style="display:none;")
-        ui.input_action_button("delete_row", "", style="display:none;")
 
         @render.ui
         def entered_results_table():
@@ -469,23 +468,10 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                                 "class": "btn btn-link p-0",
                                 "style": "font-size: 1.4rem; line-height: 1;",
                                 "onclick": f"""
-                                    // set the row index
-                                    const el = document.getElementById('delete_row_idx');
-                                    if (el) {{
-                                        el.value = '{i}';
-                                        el.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                                        el.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                                    }}
-
-                                    // click the hidden action button (Shiny can render it as a container + inner <button>)
-                                    const container = document.getElementById('delete_row');
-                                    if (container) {{
-                                        if (container.tagName.toLowerCase() === 'button') {{
-                                            container.click();
-                                        }} else {{
-                                            const innerBtn = container.querySelector('button');
-                                            if (innerBtn) innerBtn.click();
-                                        }}
+                                    if (window.Shiny && Shiny.setInputValue) {{
+                                        Shiny.setInputValue('delete_row_idx', '{i}', {{priority: 'event'}});
+                                    }} else {{
+                                        console.log('Shiny.setInputValue not available');
                                     }}
                                 """,
                             },
@@ -519,7 +505,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ]))
         
         @reactive.effect
-        @reactive.event(input.delete_row)
+        @reactive.event(input.delete_row_idx)
         def _delete_row():
             df = entered_results.get()
             if df.empty:
