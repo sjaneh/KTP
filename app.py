@@ -161,7 +161,8 @@ ui.tags.head(
 }
 
 /* Hide the delete row index helper input (used by bin buttons) */
-#delete_row_idx {
+#delete_row_idx,
+#delete_row_evt {
     display: none !important;
 }
 }
@@ -435,6 +436,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ui.h4("Results entered this session")
 
         ui.input_text("delete_row_idx", "", value="", width="1px")
+        ui.input_text("delete_row_evt", "", value="", width="1px")
 
         @render.ui
         def entered_results_table():
@@ -474,7 +476,10 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                                 "style": "font-size: 1.4rem; line-height: 1;",
                                 "onclick": f"""
                                     if (window.Shiny && Shiny.setInputValue) {{
-                                        Shiny.setInputValue('delete_row_idx', '{i}', {{priority: 'event'}});
+                                        Shiny.setInputValue('delete_row_evt', {{
+                                            idx: {i},
+                                            ts: Date.now()
+                                        }}, {{priority: 'event'}});
                                     }} else {{
                                         console.log('Shiny.setInputValue not available');
                                     }}
@@ -510,15 +515,19 @@ with ui.navset_bar(title="Menu", id="main_nav"):
         ]))
         
         @reactive.effect
-        @reactive.event(input.delete_row_idx)
+        @reactive.event(input.delete_row_evt)
         def _delete_row():
             df = entered_results.get()
             if df.empty:
                 return
 
-            idx_raw = (input.delete_row_idx() or "").strip()
+            evt = input.delete_row_evt()
+            if not isinstance(evt, dict):
+                return
+
+            i = evt.get("idx", None)
             try:
-                i = int(idx_raw)
+                i = int(i)
             except Exception:
                 return
 
