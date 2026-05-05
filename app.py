@@ -172,7 +172,7 @@ ui.tags.head(
 ui.div(
     ui.img(src="logo.png", alt="Logo"),
     ui.div(
-        ui.div("Cleanliness of Post-Consumer Material Test", class_="title"),
+        ui.div("Suitability of used mattress, bedding and furniture components and fillings for re-use.", class_="title"),
         class_="title-wrap"
     ),
     class_="app-banner",
