@@ -30,14 +30,14 @@ def make_certificate_pdf_bytes(
     theme: dict[str, Any] | None = None,
 ) -> bytes:
     """
-    Generate a single-page branded PDF certificate (A4) with TWO tables:
+    Generate a single-page branded PDF report (A4) with TWO tables:
       1) Replicate results (EB_1..3, YM_1..3, RAC_1..3)
       2) Averages + outcome (EB/YM/RAC rounded to 2dp + decision_result)
 
     Designed to be reliable on hosted environments (pure Python ReportLab).
     """
     theme = theme or {}
-    title = theme.get("title", "Test Certificate")
+    title = theme.get("title", "Test Report")
     subtitle = theme.get("subtitle", "Decision Tool Results")
     brand_name = theme.get("brand_name", "")
     primary = _hex_to_color(theme.get("primary_hex", "#193159"))
