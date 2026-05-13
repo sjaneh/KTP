@@ -9,7 +9,7 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
-from reportlab.lib.utils import ImageReader
+from reportlab.lib.utils import ImageReader, simpleSplit
 
 
 def _hex_to_color(hex_str: str, fallback=colors.HexColor("#0B3D91")):
@@ -191,8 +191,14 @@ def make_certificate_pdf_bytes(
 
     c.setFont("Helvetica", 10)
     if brand_name:
-        c.drawString(12 * mm, y, brand_name)
-        y -= 8 * mm
+        max_text_width = width - 24 * mm  # page width minus left/right margins
+        wrapped_lines = simpleSplit(brand_name, "Helvetica", 10, max_text_width)
+
+        for line in wrapped_lines:
+            c.drawString(12 * mm, y, line)
+            y -= 5 * mm
+
+        y -= 3 * mm  # extra gap after wrapped description
 
     c.drawString(12 * mm, y, f"Issued to: {user_email}")
     y -= 6 * mm
