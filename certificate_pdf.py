@@ -176,24 +176,24 @@ def make_certificate_pdf_bytes(
         except Exception:
             pass
 
-    # Title text on header
+    # Title + subtitle text on header
     c.setFillColor(colors.white)
     c.setFont("Helvetica-Bold", 16)
-    c.drawRightString(width - 12 * mm, height - 12 * mm, title)
+    c.drawRightString(width - 12 * mm, height - 11 * mm, title)
 
     c.setFont("Helvetica", 10)
-    if brand_name:
-        c.drawRightString(width - 12 * mm, height - 19 * mm, brand_name)
+    if subtitle:
+        c.drawRightString(width - 12 * mm, height - 18 * mm, subtitle)
 
     # --- Body meta info ---
     y = height - 40 * mm
     c.setFillColor(colors.black)
 
-    c.setFont("Helvetica-Bold", 11)
-    c.drawString(12 * mm, y, subtitle)
-    y -= 8 * mm
-
     c.setFont("Helvetica", 10)
+    if brand_name:
+        c.drawString(12 * mm, y, brand_name)
+        y -= 8 * mm
+
     c.drawString(12 * mm, y, f"Issued to: {user_email}")
     y -= 6 * mm
     c.drawString(12 * mm, y, f"Issued on: {issued_on.isoformat()}")
