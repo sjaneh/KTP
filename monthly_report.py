@@ -101,14 +101,11 @@ def build_email_body(year: int, month: int, summary: dict) -> str:
 def send_previous_month_report() -> None:
     year, month = 2026, 5 # previous_month_range()
 
+
     all_rows = load_summary_rows(DRIVE_ID, MONTHLY_SUMMARY_LOG_PATH)
     month_rows = rows_for_month(all_rows, year, month)
     summary = build_monthly_summary(month_rows)
 
-    print("Testing monthly report...")
-    print(f"Using year={year}, month={month}")
-    print(f"Rows found for month: {len(month_rows)}")
-    print(summary)
 
     subject = f"Monthly upload summary - {calendar.month_name[month]} {year}"
     body = build_email_body(year, month, summary)
