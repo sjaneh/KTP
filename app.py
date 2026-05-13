@@ -308,12 +308,12 @@ with ui.navset_bar(title="Menu", id="main_nav"):
    
     # ===== DECISION TOOL =====
     with ui.nav_panel("Result Calculator", value="Decision Tool"):
-        ui.h3("Result Calculator and Certificate Generator")
+        ui.h3("Result Calculator and Report Generator")
         ui.hr()
         ui.h4("1. Input each result in the spaces provided below. ")
         ui.p("Enter a number or 'TNTC'")
         ui.h4("2. Press 'Enter' after each sample")
-        ui.h4("3. Once all results are entered press 'Results Complete' to recieve your automatically generated certificate.")
+        ui.h4("3. Once all results are entered press 'Results Complete' to recieve your automatically generated report.")
 
         ui.input_text("material_name", "Material name (Case sensitive)", placeholder="e.g. Sample A / Product XYZ")
         ui.input_date("test_date", "Date of test", value=dt.date.today())
