@@ -701,7 +701,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 body_text = (
                     f"Hello,\n\n"
                     f"Your results have been submitted.\n\n"
-                    f"Please see attached certificate.\n\n"
+                    f"Please see attached report.\n\n"
                     f"Uploaded file: {filename}\n"
                     f"Number of rows: {len(df)}\n\n"
                     f"Summary:\n"
@@ -713,7 +713,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                     subject=subject,
                     body_text=body_text,
                     attachments=[
-                        ("Cleanliness of Post-Consumer Material Test Certificate.pdf", "application/pdf", pdf_bytes),
+                        ("Suitability of Used Mattress, Bedding and Furniture Components and Fillings for Reuse Report.pdf", "application/pdf", pdf_bytes),
                         (filename, "text/csv", csv_bytes),
                     ],
                 )
