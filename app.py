@@ -31,7 +31,8 @@ from one_drive import (
     ensure_folder, upload_small_file, append_audit_log_csv,
     list_children, create_view_link, update_product_key, read_json,
     download_file, 
-    upload_bytes,  
+    upload_bytes,
+    append_monthly_summary_log_csv,  
 )
 
 import decision_logic
@@ -48,6 +49,7 @@ NATURAL_FIBRES_RULES_JSON   = "NBFKTPAPP/Admin/natural_fibres_decision_rules.jso
 SYNTHETIC_FIBRES_RULES_JSON = "NBFKTPAPP/Admin/synthetic_fibres_decision_rules.json"
 CERT_LOGO_PATH = "NBFKTPAPP/Admin/brand/logo.png"          
 CERT_THEME_JSON = "NBFKTPAPP/Admin/brand/cert_theme.json"
+MONTHLY_SUMMARY_LOG_PATH = "NBFKTPAPP/Admin/monthly_summary_log.csv"
 
 EXPECTED_COLUMNS = None
 
@@ -663,6 +665,30 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             except Exception as ex:
                 ui.notification_show(f"Upload to OneDrive failed: {ex}", type="error")
                 return
+
+            decision_series = df["decision_result"].astype(str).str.strip().str.title()
+
+            green_count = int((decision_series == "Green").sum())
+            amber_count = int((decision_series == "Amber").sum())
+            red_count = int((decision_series == "Red").sum())
+
+            summary_entry = {
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "upload_filename": filename,
+                "sample_count": int(len(df)),
+                "green_count": green_count,
+                "amber_count": amber_count,
+                "red_count": red_count,
+            }
+
+            try:
+                append_monthly_summary_log_csv(
+                    DRIVE_ID,
+                    MONTHLY_SUMMARY_LOG_PATH,
+                    summary_entry,
+                )
+            except Exception as ex:
+                print(f"Monthly summary logging failed: {ex}")
             
             logo_bytes = None
             theme = {}

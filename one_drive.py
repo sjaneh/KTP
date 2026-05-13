@@ -235,3 +235,53 @@ def read_json(drive_id: str, json_path: str) -> list[dict] | dict | None:
     if b is None:
         return None
     return json.loads(b.decode("utf-8", errors="replace"))
+
+# ---------- Build monthly summary log ----------
+
+def append_monthly_summary_log_csv(drive_id: str, log_path: str, entry: dict) -> None:
+    """
+    Append one anonymous upload-summary row to a CSV in OneDrive.
+    Creates the file with headers if it doesn't exist.
+    """
+    existing = download_file(drive_id, log_path)
+
+    headers = [
+        "timestamp",
+        "upload_filename",
+        "sample_count",
+        "green_count",
+        "amber_count",
+        "red_count",
+    ]
+    rows = []
+
+    if existing is None:
+        rows.append(headers)
+    else:
+        text = existing.decode("utf-8", errors="replace")
+        reader = csv.reader(io.StringIO(text))
+        existing_rows = list(reader)
+        rows.extend(existing_rows if existing_rows else [headers])
+
+    rows.append([
+        entry.get("timestamp", ""),
+        entry.get("upload_filename", ""),
+        str(entry.get("sample_count", 0)),
+        str(entry.get("green_count", 0)),
+        str(entry.get("amber_count", 0)),
+        str(entry.get("red_count", 0)),
+    ])
+
+    out = io.StringIO()
+    writer = csv.writer(out, lineterminator="\n")
+    writer.writerows(rows)
+    csv_bytes = out.getvalue().encode("utf-8")
+
+    token = acquire_token()
+    r = requests.put(
+        f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/{log_path}:/content",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "text/csv"},
+        data=csv_bytes,
+        timeout=120,
+    )
+    r.raise_for_status()
