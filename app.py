@@ -158,7 +158,8 @@ ui.tags.head(
     }
 
 /* Add spacing between radio button options */
-#material_type .shiny-options-group .form-check {
+#material_type .shiny-options-group .form-check,
+#sample_type .shiny-options-group .form-check {
     margin-bottom: 0.5rem;   /* increase/decrease to taste */
 }
 
@@ -332,6 +333,18 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             selected=None,
         )
 
+        ui.h4("Select Sample Type")
+
+        ui.input_radio_buttons(
+            "sample_type",
+            "",
+            choices={
+                "Research and Development": "Research and Development",
+                "Regular Test Schedule": "Regular Test Schedule",
+            },
+            selected=None,
+        )
+
         ui.h5("Enterobacteriaceae (EB) replicates")
         ui.input_text("eb_1", "EB replicate 1", value="0")
         ui.input_text("eb_2", "EB replicate 2", value="0")
@@ -449,7 +462,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             if df.empty:
                 return ui.div("No rows entered yet.")
 
-            show_cols = ["material_name", "test_date", "material_type", "EB", "YM", "RAC", "decision_result"]
+            show_cols = ["material_name", "test_date", "material_type", "sample_type", "EB", "YM", "RAC", "decision_result"]
             show_cols = [c for c in show_cols if c in df.columns]
 
             header_labels = {
@@ -459,6 +472,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 "material_name": "Material Name",
                 "test_date": "Test Date",
                 "material_type": "Material Type",
+                "sample_type": "Sample Type",
                 "decision_result": "Decision Result",
             }
 
@@ -519,6 +533,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
             "material_name",
             "test_date",
             "material_type",
+            "sample_type",
             "EB_1", "EB_2", "EB_3",
             "YM_1", "YM_2", "YM_3",
             "RAC_1", "RAC_2", "RAC_3",
@@ -568,6 +583,14 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 ui.notification_show("Please select a Material category (Natural or Mixed / Synthetic or Foam).", type="error")
                 return
 
+            sample_type = (input.sample_type() or "").strip()
+            if sample_type not in ("Research and Development", "Regular Test Schedule"):
+                ui.notification_show(
+                    "Please select whether the sample is Research and Development or Regular Test Schedule.",
+                    type="error",
+                )
+                return
+
             # date comes back as datetime.date
             test_date = input.test_date()
             if not test_date:
@@ -597,6 +620,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 "material_name": name,
                 "test_date": str(test_date),
                 "material_type": mat_type,
+                "sample_type": sample_type,
 
                 # Replicates (stored exactly as user typed, trimmed)
                 "EB_1": str(input.eb_1() or "").strip(),
@@ -648,6 +672,9 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 return
             if "material_type" not in df.columns or (df["material_type"].astype(str).str.strip() == "").any():
                 ui.notification_show("Cannot submit: one or more rows are missing a Material category.", type="error")
+                return
+            if "sample_type" not in df.columns or (df["sample_type"].astype(str).str.strip() == "").any():
+                ui.notification_show("Cannot submit: one or more rows are missing a Sample Type.", type="error")
                 return
 
             # --- Upload to OneDrive (so My results page continues to work) ---
@@ -731,7 +758,7 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                     f"Uploaded file: {filename}\n"
                     f"Number of rows: {len(df)}\n\n"
                     f"Summary:\n"
-                    f"{df_email[['material_name','test_date','decision_result']].head(50).to_string(index=False)}\n"
+                    f"{df_email[['material_name','sample_type','test_date','decision_result']].head(50).to_string(index=False)}\n"
                 )
 
                 send_results_email(
