@@ -8,7 +8,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, TableStyle
+from reportlab.platypus import Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.utils import ImageReader, simpleSplit
 
 
@@ -43,6 +44,14 @@ def make_certificate_pdf_bytes(
     primary = _hex_to_color(theme.get("primary_hex", "#193159"))
     accent = _hex_to_color(theme.get("accent_hex", "#F4B400"))
     footer_text = theme.get("footer_text", "")
+    styles = getSampleStyleSheet()
+
+    cell_style = styles["BodyText"].clone("cell_style")
+    cell_style.fontName = "Helvetica"
+    cell_style.fontSize = 7
+    cell_style.leading = 8
+    cell_style.spaceBefore = 0
+    cell_style.spaceAfter = 0
 
     def _format_cell(col_name: str, value) -> str:
         if pd.isna(value):
@@ -64,11 +73,16 @@ def make_certificate_pdf_bytes(
 
         return str(value)
 
-    def _build_table_data(df_in: pd.DataFrame, cols: list[str], header_map: dict[str, str]) -> list[list[str]]:
+    def _build_table_data(df_in: pd.DataFrame, cols: list[str], header_map: dict[str, str]) -> list[list]:
         headers = [header_map.get(cn, cn) for cn in cols]
         data = [headers]
+
         for _, row in df_in.iterrows():
-            data.append([_format_cell(cn, row.get(cn)) for cn in cols])
+            data.append([
+                Paragraph(_format_cell(cn, row.get(cn)), cell_style)
+                for cn in cols
+            ])
+
         return data
 
     def _col_widths(table_w: float, cols: list[str], mode: str) -> list[float]:
@@ -88,7 +102,7 @@ def make_certificate_pdf_bytes(
             elif cn == "decision_result":
                 widths.append(table_w * 0.18)
             elif cn == "sample_type":
-                widths.append(table_w * (0.18 if mode == "replicates" else 0.22))
+                widths.append(table_w * (0.12 if mode == "replicates" else 0.16))
             else:
                 widths.append(table_w * (0.06 if mode == "replicates" else 0.10))
 
