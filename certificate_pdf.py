@@ -7,10 +7,15 @@ import pandas as pd
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm
-from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, TableStyle, Paragraph
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+)
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.utils import ImageReader, simpleSplit
+from reportlab.lib.utils import ImageReader
 
 
 def _hex_to_color(hex_str: str, fallback=colors.HexColor("#0B3D91")):
@@ -52,6 +57,21 @@ def make_certificate_pdf_bytes(
     cell_style.leading = 8
     cell_style.spaceBefore = 0
     cell_style.spaceAfter = 0
+
+    meta_style = styles["BodyText"].clone("meta_style")
+    meta_style.fontName = "Helvetica"
+    meta_style.fontSize = 10
+    meta_style.leading = 12
+    meta_style.spaceBefore = 0
+    meta_style.spaceAfter = 4
+
+    section_style = styles["Heading2"].clone("section_style")
+    section_style.fontName = "Helvetica-Bold"
+    section_style.fontSize = 10
+    section_style.leading = 12
+    section_style.textColor = colors.black
+    section_style.spaceBefore = 0
+    section_style.spaceAfter = 4
 
     def _format_cell(col_name: str, value) -> str:
         if pd.isna(value):
@@ -118,7 +138,7 @@ def make_certificate_pdf_bytes(
             ("FONTSIZE", (0, 0), (-1, -1), font_size),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.whitesmoke, colors.white]),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("LEFTPADDING", (0, 0), (-1, -1), 3),
             ("RIGHTPADDING", (0, 0), (-1, -1), 3),
             ("TOPPADDING", (0, 0), (-1, -1), 2),
@@ -161,129 +181,115 @@ def make_certificate_pdf_bytes(
         "decision_result": "Result",
     }
 
-    # --------------------------
-    # PDF canvas + header
-    # --------------------------
+    def _draw_page_chrome(canvas, doc):
+        page_width, page_height = A4
+
+        # Header bar
+        canvas.setFillColor(primary)
+        canvas.rect(0, page_height - 28 * mm, page_width, 28 * mm, fill=1, stroke=0)
+
+        # Logo
+        if logo_png_bytes:
+            try:
+                img = ImageReader(io.BytesIO(logo_png_bytes))
+                target_h = 22 * mm
+                iw, ih = img.getSize()
+                target_w = target_h * (iw / ih)
+
+                canvas.drawImage(
+                    img,
+                    12 * mm,
+                    page_height - 25 * mm,
+                    width=target_w,
+                    height=target_h,
+                    mask="auto",
+                    preserveAspectRatio=True,
+                    anchor="sw",
+                )
+            except Exception:
+                pass
+
+        # Title / subtitle
+        canvas.setFillColor(colors.white)
+        canvas.setFont("Helvetica-Bold", 16)
+        canvas.drawRightString(page_width - 12 * mm, page_height - 11 * mm, title)
+
+        canvas.setFont("Helvetica", 10)
+        if subtitle:
+            canvas.drawRightString(page_width - 12 * mm, page_height - 18 * mm, subtitle)
+
+        # Accent line
+        canvas.setStrokeColor(accent)
+        canvas.setLineWidth(2)
+        canvas.line(12 * mm, page_height - 42 * mm, page_width - 12 * mm, page_height - 42 * mm)
+
+        # Footer text
+        if footer_text:
+            canvas.setFont("Helvetica", 8)
+            canvas.setFillColor(colors.grey)
+            canvas.drawString(12 * mm, 10 * mm, footer_text)
+
+        # Page number
+        canvas.setFont("Helvetica", 8)
+        canvas.setFillColor(colors.grey)
+        canvas.drawRightString(page_width - 12 * mm, 10 * mm, f"Page {doc.page}")
+    
     buf = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=A4)
     width, height = A4
 
-    # --- Header bar ---
-    c.setFillColor(primary)
-    c.rect(0, height - 28 * mm, width, 28 * mm, fill=1, stroke=0)
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=12 * mm,
+        rightMargin=12 * mm,
+        topMargin=45 * mm,
+        bottomMargin=18 * mm,
+    )
 
-    # Logo (if present)
-    if logo_png_bytes:
-        try:
-            img = ImageReader(io.BytesIO(logo_png_bytes))
-            target_h = 22 * mm  # increase this to make it taller
-            iw, ih = img.getSize()
-            target_w = target_h * (iw / ih)
+    story = []
 
-            c.drawImage(
-                img, 
-                12 * mm, 
-                height - 25 * mm,   # adjust Y if needed after changing height
-                width=target_w,
-                height=target_h,
-                mask="auto",
-                preserveAspectRatio=True,
-                anchor="sw",
-            )
-        except Exception:
-            pass
-
-    # Title + subtitle text on header
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 16)
-    c.drawRightString(width - 12 * mm, height - 11 * mm, title)
-
-    c.setFont("Helvetica", 10)
-    if subtitle:
-        c.drawRightString(width - 12 * mm, height - 18 * mm, subtitle)
-
-    # --- Body meta info ---
-    y = height - 40 * mm
-    c.setFillColor(colors.black)
-
-    c.setFont("Helvetica", 10)
     if brand_name:
-        max_text_width = width - 24 * mm  # page width minus left/right margins
-        wrapped_lines = simpleSplit(brand_name, "Helvetica", 10, max_text_width)
+        story.append(Paragraph(brand_name, meta_style))
+        story.append(Spacer(1, 3 * mm))
 
-        for line in wrapped_lines:
-            c.drawString(12 * mm, y, line)
-            y -= 5 * mm
+    story.append(Paragraph(f"Issued to: {user_email}", meta_style))
+    story.append(Paragraph(f"Issued on: {issued_on.isoformat()}", meta_style))
+    story.append(Spacer(1, 5 * mm))
 
-        y -= 3 * mm  # extra gap after wrapped description
-
-    c.drawString(12 * mm, y, f"Issued to: {user_email}")
-    y -= 6 * mm
-    c.drawString(12 * mm, y, f"Issued on: {issued_on.isoformat()}")
-    y -= 10 * mm
-    
-
-    # Accent line
-    c.setStrokeColor(accent)
-    c.setLineWidth(2)
-    c.line(12 * mm, y, width - 12 * mm, y)
-    y -= 8 * mm
-
-    # --------------------------
-    # Two stacked tables
-    # --------------------------
-    table_w = width - 24 * mm
-    x_left = 12 * mm
-
-    # Replicates section title
-    c.setFont("Helvetica-Bold", 10)
-    c.setFillColor(colors.black)
-    c.drawString(x_left, y, "Replicate results")
-    y -= 6 * mm
+    story.append(Paragraph("Replicate results", section_style))
+    story.append(Spacer(1, 2 * mm))
 
     if not df_rep.empty:
         data_rep = _build_table_data(df_rep, replicates_cols, header_map)
         t_rep = _styled_table(
             data_rep,
-            _col_widths(table_w, replicates_cols, mode="replicates"),
+            _col_widths(doc.width, replicates_cols, mode="replicates"),
             font_size=7,
         )
-        w_rep, h_rep = t_rep.wrap(table_w, height)
-        y_rep_bottom = y - h_rep
-        t_rep.drawOn(c, x_left, y_rep_bottom)
-        y = y_rep_bottom - 8 * mm
+        story.append(t_rep)
+        story.append(Spacer(1, 6 * mm))
     else:
-        c.setFont("Helvetica", 9)
-        c.drawString(x_left, y, "No replicate columns found in results.")
-        y -= 10 * mm
+        story.append(Paragraph("No replicate columns found in results.", meta_style))
+        story.append(Spacer(1, 4 * mm))
 
-    # Summary section title
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(x_left, y, "Averages and outcome")
-    y -= 6 * mm
+    story.append(Paragraph("Averages and outcome", section_style))
+    story.append(Spacer(1, 2 * mm))
 
     if not df_sum.empty:
         data_sum = _build_table_data(df_sum, summary_cols, header_map)
         t_sum = _styled_table(
             data_sum,
-            _col_widths(table_w, summary_cols, mode="summary"),
+            _col_widths(doc.width, summary_cols, mode="summary"),
             font_size=8,
         )
-        w_sum, h_sum = t_sum.wrap(table_w, height)
-        y_sum_bottom = y - h_sum
-        t_sum.drawOn(c, x_left, y_sum_bottom)
-        y = y_sum_bottom - 4 * mm
+        story.append(t_sum)
     else:
-        c.setFont("Helvetica", 9)
-        c.drawString(x_left, y, "No summary columns found in results.")
-        y -= 10 * mm
+        story.append(Paragraph("No summary columns found in results.", meta_style))
 
-    # --- Footer ---
-    if footer_text:
-        c.setFont("Helvetica", 8)
-        c.setFillColor(colors.grey)
-        c.drawString(12 * mm, 10 * mm, footer_text)
+    doc.build(
+        story,
+        onFirstPage=_draw_page_chrome,
+        onLaterPages=_draw_page_chrome,
+    )
 
-    c.showPage()
-    c.save()
     return buf.getvalue()
