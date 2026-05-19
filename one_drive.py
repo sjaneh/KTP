@@ -252,6 +252,14 @@ def append_monthly_summary_log_csv(drive_id: str, log_path: str, entry: dict) ->
         "green_count",
         "amber_count",
         "red_count",
+        "rd_sample_count",
+        "regular_sample_count",
+        "rd_green_count",
+        "rd_amber_count",
+        "rd_red_count",
+        "regular_green_count",
+        "regular_amber_count",
+        "regular_red_count",
     ]
     rows = []
 
@@ -270,6 +278,14 @@ def append_monthly_summary_log_csv(drive_id: str, log_path: str, entry: dict) ->
         str(entry.get("green_count", 0)),
         str(entry.get("amber_count", 0)),
         str(entry.get("red_count", 0)),
+        str(entry.get("rd_sample_count", 0)),
+        str(entry.get("regular_sample_count", 0)),
+        str(entry.get("rd_green_count", 0)),
+        str(entry.get("rd_amber_count", 0)),
+        str(entry.get("rd_red_count", 0)),
+        str(entry.get("regular_green_count", 0)),
+        str(entry.get("regular_amber_count", 0)),
+        str(entry.get("regular_red_count", 0)),
     ])
 
     out = io.StringIO()

@@ -59,28 +59,72 @@ def build_monthly_summary(rows: list[dict]) -> dict:
     amber_count = 0
     red_count = 0
 
+    rd_sample_count = 0
+    regular_sample_count = 0
+
+    rd_green_count = 0
+    rd_amber_count = 0
+    rd_red_count = 0
+
+    regular_green_count = 0
+    regular_amber_count = 0
+    regular_red_count = 0
+
     for row in rows:
         total_samples += int(row.get("sample_count", 0) or 0)
         green_count += int(row.get("green_count", 0) or 0)
         amber_count += int(row.get("amber_count", 0) or 0)
         red_count += int(row.get("red_count", 0) or 0)
+        rd_sample_count += int(row.get("rd_sample_count", 0) or 0)
+        regular_sample_count += int(row.get("regular_sample_count", 0) or 0)
+
+        rd_green_count += int(row.get("rd_green_count", 0) or 0)
+        rd_amber_count += int(row.get("rd_amber_count", 0) or 0)
+        rd_red_count += int(row.get("rd_red_count", 0) or 0)
+
+        regular_green_count += int(row.get("regular_green_count", 0) or 0)
+        regular_amber_count += int(row.get("regular_amber_count", 0) or 0)
+        regular_red_count += int(row.get("regular_red_count", 0) or 0)
+
+    avg_samples_per_upload = round(total_samples / uploads, 1) if uploads else 0.0
 
     total_categorised = green_count + amber_count + red_count
+    rd_total_categorised = rd_green_count + rd_amber_count + rd_red_count
+    regular_total_categorised = regular_green_count + regular_amber_count + regular_red_count
 
-    def pct(value: int) -> float:
-        if total_categorised == 0:
+    def pct(value: int, total: int) -> float:
+        if total == 0:
             return 0.0
-        return round((value / total_categorised) * 100, 1)
+        return round((value / total) * 100, 1)
 
     return {
         "uploads": uploads,
         "total_samples": total_samples,
+        "avg_samples_per_upload": avg_samples_per_upload,
+
         "green_count": green_count,
         "amber_count": amber_count,
         "red_count": red_count,
-        "green_pct": pct(green_count),
-        "amber_pct": pct(amber_count),
-        "red_pct": pct(red_count),
+        "green_pct": pct(green_count, total_categorised),
+        "amber_pct": pct(amber_count, total_categorised),
+        "red_pct": pct(red_count, total_categorised),
+
+        "rd_sample_count": rd_sample_count,
+        "regular_sample_count": regular_sample_count,
+
+        "rd_green_count": rd_green_count,
+        "rd_amber_count": rd_amber_count,
+        "rd_red_count": rd_red_count,
+        "rd_green_pct": pct(rd_green_count, rd_total_categorised),
+        "rd_amber_pct": pct(rd_amber_count, rd_total_categorised),
+        "rd_red_pct": pct(rd_red_count, rd_total_categorised),
+
+        "regular_green_count": regular_green_count,
+        "regular_amber_count": regular_amber_count,
+        "regular_red_count": regular_red_count,
+        "regular_green_pct": pct(regular_green_count, regular_total_categorised),
+        "regular_amber_pct": pct(regular_amber_count, regular_total_categorised),
+        "regular_red_pct": pct(regular_red_count, regular_total_categorised),
     }
 
 
@@ -90,16 +134,32 @@ def build_email_body(year: int, month: int, summary: dict) -> str:
     return (
         f"Monthly upload summary for {month_name} {year}\n\n"
         f"Number of uploads: {summary['uploads']}\n"
-        f"Number of samples: {summary['total_samples']}\n\n"
-        f"Result category overview:\n"
+        f"Number of samples: {summary['total_samples']}\n"
+        f"Average samples per upload: {summary['avg_samples_per_upload']}\n\n"
+
+        f"Overall result category overview:\n"
         f"- Good (Green): {summary['green_count']} ({summary['green_pct']}%)\n"
         f"- Unsatisfactory (Amber): {summary['amber_count']} ({summary['amber_pct']}%)\n"
-        f"- Cause for Concern (Red): {summary['red_count']} ({summary['red_pct']}%)\n"
+        f"- Cause for Concern (Red): {summary['red_count']} ({summary['red_pct']}%)\n\n"
+
+        f"Sample type split:\n"
+        f"- Research and Development samples: {summary['rd_sample_count']}\n"
+        f"- Regular Test Schedule samples: {summary['regular_sample_count']}\n\n"
+
+        f"Research and Development result breakdown:\n"
+        f"- Good (Green): {summary['rd_green_count']} ({summary['rd_green_pct']}%)\n"
+        f"- Unsatisfactory (Amber): {summary['rd_amber_count']} ({summary['rd_amber_pct']}%)\n"
+        f"- Cause for Concern (Red): {summary['rd_red_count']} ({summary['rd_red_pct']}%)\n\n"
+
+        f"Regular Test Schedule result breakdown:\n"
+        f"- Good (Green): {summary['regular_green_count']} ({summary['regular_green_pct']}%)\n"
+        f"- Unsatisfactory (Amber): {summary['regular_amber_count']} ({summary['regular_amber_pct']}%)\n"
+        f"- Cause for Concern (Red): {summary['regular_red_count']} ({summary['regular_red_pct']}%)\n"
     )
 
 
 def send_previous_month_report() -> None:
-    year, month = 2026, 5 # previous_month_range()
+    year, month = previous_month_range()
 
 
     all_rows = load_summary_rows(DRIVE_ID, MONTHLY_SUMMARY_LOG_PATH)

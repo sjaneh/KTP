@@ -694,10 +694,25 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 return
 
             decision_series = df["decision_result"].astype(str).str.strip().str.title()
+            sample_type_series = df["sample_type"].astype(str).str.strip()
 
             green_count = int((decision_series == "Green").sum())
             amber_count = int((decision_series == "Amber").sum())
             red_count = int((decision_series == "Red").sum())
+
+            rd_mask = sample_type_series == "Research and Development"
+            regular_mask = sample_type_series == "Regular Test Schedule"
+
+            rd_sample_count = int(rd_mask.sum())
+            regular_sample_count = int(regular_mask.sum())
+
+            rd_green_count = int((rd_mask & (decision_series == "Green")).sum())
+            rd_amber_count = int((rd_mask & (decision_series == "Amber")).sum())
+            rd_red_count = int((rd_mask & (decision_series == "Red")).sum())
+
+            regular_green_count = int((regular_mask & (decision_series == "Green")).sum())
+            regular_amber_count = int((regular_mask & (decision_series == "Amber")).sum())
+            regular_red_count = int((regular_mask & (decision_series == "Red")).sum())
 
             summary_entry = {
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -706,6 +721,14 @@ with ui.navset_bar(title="Menu", id="main_nav"):
                 "green_count": green_count,
                 "amber_count": amber_count,
                 "red_count": red_count,
+                "rd_sample_count": rd_sample_count,
+                "regular_sample_count": regular_sample_count,
+                "rd_green_count": rd_green_count,
+                "rd_amber_count": rd_amber_count,
+                "rd_red_count": rd_red_count,
+                "regular_green_count": regular_green_count,
+                "regular_amber_count": regular_amber_count,
+                "regular_red_count": regular_red_count,
             }
 
             try:
